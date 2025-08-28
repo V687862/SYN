@@ -5,6 +5,7 @@ import '../providers/player_state_provider.dart';
 import '../providers/app_screen_provider.dart'; // For fallback navigation
 import '../models/app_screen.dart'; // For fallback navigation
 import '../models/memory_event.dart'; // To access EventChoice
+import '../ui/syn_kit.dart';
 
 class MemoryEventScreen extends ConsumerWidget {
   const MemoryEventScreen({super.key});
@@ -57,18 +58,12 @@ class MemoryEventScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Display Event Description
-            Container(
+            GhostPanel(
               padding: const EdgeInsets.all(12.0),
               margin: const EdgeInsets.only(bottom: 20.0),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(8.0),
-              ),
               child: Text(
                 currentEvent.description,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontSize: 18),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 18),
               ),
             ),
 
@@ -89,14 +84,9 @@ class MemoryEventScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, EventChoice choice) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 15.0),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontFamily: 'Orbitron',
-          ),
-        ),
+      child: DivButton(
+        label: choice.text,
+        icon: Icons.chevron_right,
         onPressed: () async {
           print(
             "--- UI: Choice '${choice.text}' (ID: ${choice.id}) Button Pressed ---",
@@ -104,7 +94,6 @@ class MemoryEventScreen extends ConsumerWidget {
           // This method handles its own navigation logic (pushing a new event or popping).
           await ref.read(playerStateProvider.notifier).processEventChoice(choice);
         },
-        child: Text(choice.text, textAlign: TextAlign.center),
       ),
     );
   }
@@ -112,14 +101,9 @@ class MemoryEventScreen extends ConsumerWidget {
   Widget _buildContinueButton(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 15.0),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontFamily: 'Orbitron',
-          ),
-        ),
+      child: DivButton(
+        label: 'Continue',
+        icon: Icons.check_circle_outline,
         onPressed: () {
           print("--- UI: Event Acknowledged (No Choices) ---");
           // First, update the player state to clear the event.
@@ -127,7 +111,6 @@ class MemoryEventScreen extends ConsumerWidget {
           // FIXED: Then, explicitly navigate back to the previous screen (dashboard).
           ref.read(appScreenProvider.notifier).pop();
         },
-        child: const Text("Continue"),
       ),
     );
   }

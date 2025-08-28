@@ -238,6 +238,12 @@ class _DivButtonState extends State<DivButton> with SingleTickerProviderStateMix
             final outline = Color.lerp(baseBorder, accent.withOpacity(.5), t)!;
             final glowOpacity = _enabled ? .18 * t : 0.0;
             final textColor = !_enabled ? Colors.white38 : Color.lerp(Colors.white70, Colors.white, t*.6)!;
+            final label = Text(
+              widget.label,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: textColor, fontSize: _font(), letterSpacing: 1.5, fontWeight: FontWeight.w600),
+            );
+
             final content = Container(
               padding: _pad(),
               decoration: BoxDecoration(
@@ -252,12 +258,24 @@ class _DivButtonState extends State<DivButton> with SingleTickerProviderStateMix
                   SizedBox(width: 18, height: 2, child: CustomPaint(painter: _GrowLinePainter(progress: t, color: accent))),
                   const SizedBox(width: 10),
                   if(widget.icon!=null) ...[ Icon(widget.icon, size: 20, color: textColor), const SizedBox(width: 8),],
-                  Expanded(child: Text(widget.label, style: TextStyle(color: textColor, fontSize: _font(), letterSpacing: 1.5, fontWeight: FontWeight.w600))),
+                  if (widget.fullWidth)
+                    Expanded(child: label)
+                  else
+                    Flexible(fit: FlexFit.loose, child: label),
                   if(widget.showChevron) ...[ const SizedBox(width: 6), Icon(Icons.chevron_right, size: 20, color: textColor), ],
                 ],
               ),
             );
-            return widget.fullWidth ? Row(children: [Expanded(child: content)]) : content;
+            // Avoid using Expanded here to be safe inside shrink-wrapping Rows.
+            // If fullWidth and bounded, stretch to max width; otherwise, return intrinsic size.
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                if (widget.fullWidth && constraints.hasBoundedWidth) {
+                  return SizedBox(width: constraints.maxWidth, child: content);
+                }
+                return content;
+              },
+            );
           },
         ),
       ),

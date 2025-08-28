@@ -4,11 +4,15 @@ import 'package:flutter/services.dart' show rootBundle;
 import '../models/country.dart';
 import '../models/gender_option.dart';
 import '../models/core_drive.dart';
+import '../models/baby_name.dart';
+import '../models/school.dart';
 
 class StaticDataService {
   List<Country>? _countries;
   List<GenderOption>? _genders;
   List<CoreDrive>? _coreDrives;
+  List<BabyName>? _babyNames;
+  List<School>? _schools;
 
   Future<List<T>> _loadJsonList<T>(
     String assetPath,
@@ -53,5 +57,31 @@ class StaticDataService {
     );
   }
 
-  // TODO: Add methods for baby names, education, etc.
+  // Baby names support
+  Future<List<BabyName>> getBabyNames() async {
+    // Attempts to load from an optional asset. Returns [] on failure.
+    return _babyNames ??= await _loadJsonList(
+      'assets/static/baby_names.json',
+      BabyName.fromJson,
+    );
+  }
+
+  Future<List<BabyName>> getBabyNamesByCountry(String countryCode) async {
+    final names = await getBabyNames();
+    return names.where((n) => n.countryCodes == null || n.countryCodes!.contains(countryCode)).toList();
+  }
+
+  Future<List<BabyName>> getBabyNamesByGender(String genderId) async {
+    final names = await getBabyNames();
+    return names.where((n) => n.genderId == null || n.genderId == genderId).toList();
+  }
+
+  // Education (schools) support
+  Future<List<School>> getSchools() async {
+    // Attempts to load from an optional asset. Returns [] on failure.
+    return _schools ??= await _loadJsonList(
+      'assets/static/education_schools.json',
+      School.fromJson,
+    );
+  }
 }

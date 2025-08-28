@@ -6,6 +6,7 @@ import 'package:syn/models/npc.dart';
 import 'package:syn/models/education_stage.dart';
 import 'package:syn/models/appearance.dart';
 import 'package:syn/models/dynamic_modifiers.dart';
+import 'package:syn/models/education_focus.dart';
 
 
 class PlayerProfile {
@@ -31,6 +32,8 @@ class PlayerProfile {
   final int? yearsInCurrentStage;
   final List<EducationStage> completedEducationStages;
   final List<MemoryEvent> memories;
+  final EducationFocus educationFocus; // Player's chosen school-year focus
+  final int educationPerformance; // Aggregate performance score for the current/last stage
 
   const PlayerProfile({
     required this.name,
@@ -55,6 +58,8 @@ class PlayerProfile {
     this.yearsInCurrentStage = 0,
     this.completedEducationStages = const [],
     this.memories = const [],
+    this.educationFocus = EducationFocus.study,
+    this.educationPerformance = 0,
   });
 
   String get dominantDrive {
@@ -78,6 +83,8 @@ class PlayerProfile {
       coreDriveScores: {},
       activeModifiers: [],
       currentEducationStage: EducationStage.none,
+      educationFocus: EducationFocus.study,
+      educationPerformance: 0,
     );
   }
 
@@ -107,6 +114,8 @@ class PlayerProfile {
     int? yearsInCurrentStage,
     List<EducationStage>? completedEducationStages,
     List<MemoryEvent>? memories, // Added memories to copyWith parameters
+    EducationFocus? educationFocus,
+    int? educationPerformance,
   }) {
     return PlayerProfile(
       name: name ?? this.name,
@@ -138,6 +147,8 @@ class PlayerProfile {
       completedEducationStages:
           completedEducationStages ?? this.completedEducationStages,
       memories: memories ?? this.memories, // Use the provided or existing memories
+      educationFocus: educationFocus ?? this.educationFocus,
+      educationPerformance: educationPerformance ?? this.educationPerformance,
     );
   }
 
@@ -176,6 +187,10 @@ class PlayerProfile {
       memories: (json['memories'] as List<dynamic>)
           .map((e) => MemoryEvent.fromJson(e as Map<String, dynamic>))
           .toList(),
+      educationFocus: json['educationFocus'] != null
+          ? EducationFocus.values.byName(json['educationFocus'] as String)
+          : EducationFocus.study,
+      educationPerformance: json['educationPerformance'] as int? ?? 0,
     );
   }
 
@@ -204,6 +219,8 @@ class PlayerProfile {
       'yearsInCurrentStage': yearsInCurrentStage,
       'completedEducationStages': completedEducationStages.map((e) => e.name).toList(),
       'memories': memories.map((e) => e.toJson()).toList(),
+      'educationFocus': educationFocus.name,
+      'educationPerformance': educationPerformance,
     };
   }
 }

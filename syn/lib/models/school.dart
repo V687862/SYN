@@ -21,7 +21,30 @@ class School {
     this.nextStageOnGraduation,
   });
 
-  // For simplicity, we'll omit fromJson/toJson for now,
-  // as these might be hardcoded or loaded from a simpler structure initially.
-  // They can be added if you decide to make schools dynamically loadable from JSON.
+  factory School.fromJson(Map<String, dynamic> json) {
+    EducationStage parseStage(String? s) {
+      if (s == null) return EducationStage.none;
+      return EducationStage.values.firstWhere(
+        (e) => e.name == s,
+        orElse: () => EducationStage.none,
+      );
+    }
+
+    Map<String, num>? parseEffects(dynamic m) {
+      if (m is Map) {
+        return m.map<String, num>((key, value) => MapEntry(key.toString(), (value as num)));
+      }
+      return null;
+    }
+
+    return School(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      stage: parseStage(json['stage'] as String?),
+      minAgeToEnroll: (json['minAgeToEnroll'] as num).toInt(),
+      typicalDurationInYears: (json['typicalDurationInYears'] as num).toInt(),
+      graduationEffects: parseEffects(json['graduationEffects']),
+      nextStageOnGraduation: parseStage(json['nextStageOnGraduation'] as String?),
+    );
+  }
 }

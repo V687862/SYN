@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../ui/syn_kit.dart';
 // ← Needed for .characters
 import '../providers/player_state_provider.dart';
 import '../providers/static_data_providers.dart';
@@ -165,7 +166,7 @@ class PlayerInfoCard extends ConsumerWidget {
               // Active modifiers → ghost chips
               if (player.activeModifiers.isNotEmpty) ...[
                 const SizedBox(height: 14),
-                Divider(color: Colors.white.withOpacity(.12), height: 1),
+                const ThinDivider(),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,

@@ -6,6 +6,7 @@ import '../models/school.dart';
 // ignore: unused_import, for PlayerStats type reference in comments or future use
 import '../models/player_stats.dart'; 
 import '../models/memory_event.dart'; // For triggeredEvent
+import '../models/education_focus.dart';
 // TODO: Import MemoryEngineService if needed for fetching specific graduation events
 // import 'memory_engine_service.dart'; 
 
@@ -15,6 +16,9 @@ typedef EducationProgressResult = ({
   String? graduationMessage,       // Message like "Graduated from High School!"
   Map<String, num>? graduationEffects, // Effects to be applied by the notifier
   MemoryEvent? triggeredEvent,      // Optional: Graduation could trigger a specific event
+  Map<String, num>? yearlyEffects,  // Effects to be applied each school year based on focus
+  String? yearlyMessage,            // E.g., "You focused on sports this year."
+  bool failedYear,                  // If true, do not increment stage year
 });
 
 
@@ -88,6 +92,24 @@ class EducationService {
     ),
     // TODO: Add definitions for Master's, Doctorate, and other specialized schools.
   ];
+
+  // Helper to access a school definition by ID (for UI display)
+  School? getSchoolById(String id) {
+    try {
+      return _availableSchools.firstWhere((s) => s.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Helper to access a school by stage (for auto-enrollment)
+  School? getSchoolByStage(EducationStage stage) {
+    try {
+      return _availableSchools.firstWhere((s) => s.stage == stage);
+    } catch (_) {
+      return null;
+    }
+  }
 
   // Get a list of schools the player might be eligible to enroll in
   List<School> getPotentialSchools(PlayerProfile player) {
@@ -188,8 +210,11 @@ class EducationService {
       return (
         updatedProfileBase: player,
         graduationMessage: null,
-        graduationEffects: null, 
-        triggeredEvent: null
+        graduationEffects: null,
+        triggeredEvent: null,
+        yearlyEffects: null,
+        yearlyMessage: null,
+        failedYear: false,
       );
     }
 
@@ -203,8 +228,54 @@ class EducationService {
           throw Exception("Current school with ID ${player.currentSchoolId} not found for player.");
         });
 
-    int newYearsInStage = (player.yearsInCurrentStage ?? 0) + 1;
-    PlayerProfile updatedProfileBase = player.copyWith(yearsInCurrentStage: newYearsInStage);
+    // Compute yearly focus effects and performance
+    final focus = player.educationFocus;
+    Map<String, num>? yearlyEffects;
+    String? yearlyMessage;
+    int perfDelta = 0;
+
+    switch (focus) {
+      case EducationFocus.study:
+        yearlyEffects = { 'intelligence': 2, 'mood': -1 };
+        yearlyMessage = 'You focused on studying this year.';
+        perfDelta = 2;
+        break;
+      case EducationFocus.athletics:
+        yearlyEffects = { 'strength': 2, 'health': 1, 'mood': 1 };
+        yearlyMessage = 'You trained hard in athletics this year.';
+        perfDelta = 1;
+        break;
+      case EducationFocus.social:
+        yearlyEffects = { 'charisma': 2, 'social': 2, 'mood': 1 };
+        yearlyMessage = 'You invested in your social life this year.';
+        perfDelta = 1;
+        break;
+      case EducationFocus.work:
+        yearlyEffects = { 'wealth': 200, 'mood': -1 };
+        yearlyMessage = 'You worked a side job alongside school.';
+        perfDelta = 0; // neutral for academics
+        break;
+      case EducationFocus.skip:
+        yearlyEffects = { 'mood': 1 };
+        yearlyMessage = 'You skipped classes too often this year.';
+        perfDelta = -2;
+        break;
+    }
+
+    int newPerf = (player.educationPerformance + perfDelta).clamp(-10, 100);
+
+    // Failure chance if skipping frequently or very low performance
+    bool failedYear = false;
+    if (focus == EducationFocus.skip && newPerf <= -2) {
+      failedYear = true;
+      yearlyMessage = '${yearlyMessage ?? ''} You failed to advance this year.';
+    }
+
+    int newYearsInStage = failedYear ? (player.yearsInCurrentStage ?? 0) : (player.yearsInCurrentStage ?? 0) + 1;
+    PlayerProfile updatedProfileBase = player.copyWith(
+      yearsInCurrentStage: newYearsInStage,
+      educationPerformance: newPerf,
+    );
     String? graduationMessage;
     Map<String, num>? effectsToApply;
     MemoryEvent? triggeredGraduationEvent; 
@@ -214,11 +285,20 @@ class EducationService {
     // Such events could modify stats, traits, or relationships during the school year.
 
     // Check for graduation
-    if (newYearsInStage >= currentSchool.typicalDurationInYears) {
-      graduationMessage = "Congratulations! You've graduated from ${currentSchool.name} (${educationStageToString(currentSchool.stage)})!";
+    if (!failedYear && newYearsInStage >= currentSchool.typicalDurationInYears) {
+      // Honors if performance high
+      final honors = newPerf >= 6;
+      graduationMessage = honors
+          ? "Honors! You've graduated from ${currentSchool.name} (${educationStageToString(currentSchool.stage)})."
+          : "Congratulations! You've graduated from ${currentSchool.name} (${educationStageToString(currentSchool.stage)})!";
       print(graduationMessage);
 
-      effectsToApply = currentSchool.graduationEffects; 
+      effectsToApply = Map<String, num>.from(currentSchool.graduationEffects ?? {});
+      if (honors) {
+        // Small additional boost for honors
+        effectsToApply.update('intelligence', (v) => v + 3, ifAbsent: () => 3);
+        effectsToApply.update('confidence', (v) => v + 2, ifAbsent: () => 2);
+      }
 
       updatedProfileBase = updatedProfileBase.copyWith(
         currentSchoolId: null, // No longer in this specific school instance
@@ -226,6 +306,8 @@ class EducationService {
         currentEducationStage: currentSchool.nextStageOnGraduation ?? EducationStage.none, // Move to next stage or none
         yearsInCurrentStage: 0, // Reset for next stage
         completedEducationStages: [...updatedProfileBase.completedEducationStages, currentSchool.stage],
+        // Reset performance for next stage
+        educationPerformance: 0,
       );
 
       // TODO: Implement logic to fetch/create a specific graduation MemoryEvent.
@@ -249,7 +331,10 @@ class EducationService {
       updatedProfileBase: updatedProfileBase,
       graduationMessage: graduationMessage,
       graduationEffects: effectsToApply,
-      triggeredEvent: triggeredGraduationEvent
+      triggeredEvent: triggeredGraduationEvent,
+      yearlyEffects: yearlyEffects,
+      yearlyMessage: yearlyMessage,
+      failedYear: failedYear,
     );
   }
 }

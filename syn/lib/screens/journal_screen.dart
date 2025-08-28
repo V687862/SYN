@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../ui/syn_kit.dart';
 import '../models/memory_event.dart';
 import '../providers/player_state_provider.dart';
 import '../providers/app_screen_provider.dart';
@@ -248,7 +249,7 @@ class _MemoryDetails extends StatelessWidget {
         ),
         if (actionEntry != null) ...[
           const SizedBox(height: 12),
-          const Divider(color: dividerColor, height: 1),
+          const ThinDivider(),
           const SizedBox(height: 8),
           Text('Your Choice:',
               style: TextStyle(

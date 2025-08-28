@@ -5,6 +5,7 @@ import '../providers/app_screen_provider.dart';
 import '../models/app_screen.dart';
 import '../providers/player_state_provider.dart';
 import '../widgets/synth_menu_button.dart'; // Import the new widget
+import '../ui/syn_kit.dart';
 
 class MainMenuScreen extends ConsumerWidget {
   const MainMenuScreen({super.key});
@@ -100,21 +101,12 @@ class MainMenuScreen extends ConsumerWidget {
                       if (context.mounted) {
                         // A simple check to see if a real profile was loaded (e.g., name is not empty)
                         if (loadedProfile.name.isNotEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Profile Loaded! Welcome back.'),
-                              backgroundColor: Colors.blue,
-                            ),
-                          );
+                          Toast.notify(context, 'Profile Loaded! Welcome back.', color: Colors.blue);
                           // Navigate to the dashboard since a game is loaded.
                           ref.read(appScreenProvider.notifier).resetTo(AppScreen.dashboard);
                         } else {
                           // Inform the user if no saved game was found.
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('No saved game found.'),
-                            ),
-                          );
+                          Toast.notify(context, 'No saved game found.');
                         }
                       }
                     },

@@ -5,6 +5,7 @@ import '../models/player_profile.dart';
 import '../models/settings.dart';
 import '../providers/player_state_provider.dart';
 import '../widgets/stat_stream.dart'; // For DisplayStatInfo & LifeStage
+import '../ui/syn_kit.dart';
 
 class LifeStageTransitionModal extends ConsumerStatefulWidget {
   final int oldAge;
@@ -175,12 +176,11 @@ class _LifeStageTransitionModalState
               ),
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
+            DivButton(
+              label: 'CONTINUE',
+              icon: Icons.check,
               onPressed: () => Navigator.of(context).pop(),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-              ),
-              child: const Text("CONTINUE"),
+              fullWidth: false,
             )
           ],
         ),

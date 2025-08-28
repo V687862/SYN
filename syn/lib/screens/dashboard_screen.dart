@@ -9,6 +9,7 @@ import '../models/player_profile.dart';
 // Services & your existing widgets
 import '../services/slm_events.dart';
 import '../widgets/stat_stream.dart';
+import '../widgets/advance_year.dart';
 
 // ✨ Diviniko kit
 import '../ui/syn_kit.dart';
@@ -107,29 +108,11 @@ class DashboardScreen extends ConsumerWidget {
             ),
 
             // Link-style secondary action
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () {
-                  // If you have custom logic in AdvanceYearButton, call it here,
-                  // or keep AdvanceYearButton below instead of this TextButton.
-                  TraceCircleOverlay.of(context)?.ping();
-                },
-                icon: const Icon(Icons.fast_forward, size: 18),
-                label: const Text('ADVANCE YEAR'),
-                style: TextButton.styleFrom(
-                  foregroundColor: theme.colorScheme.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                  textStyle: const TextStyle(
-                    letterSpacing: 2, fontWeight: FontWeight.w600),
-                ),
-              ),
+            // Advance year control
+            const Padding(
+              padding: EdgeInsets.only(top: 0, bottom: 8),
+              child: AdvanceYearButton(),
             ),
-            // If you want your original implementation, uncomment:
-            // const Padding(
-            //   padding: EdgeInsets.only(top: 0, bottom: 8),
-            //   child: AdvanceYearButton(),
-            // ),
 
             const SizedBox(height: 8),
 

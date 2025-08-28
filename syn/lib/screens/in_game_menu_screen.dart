@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_screen_provider.dart';
 import '../providers/player_state_provider.dart';
 import '../models/app_screen.dart';
+import '../ui/syn_kit.dart';
 
 class InGameMenuScreen extends ConsumerStatefulWidget {
   const InGameMenuScreen({super.key});
@@ -12,20 +13,7 @@ class InGameMenuScreen extends ConsumerStatefulWidget {
   ConsumerState<InGameMenuScreen> createState() => _InGameMenuScreenState();
 
   static void _notify(BuildContext context, String msg, Color color) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(msg, style: const TextStyle(letterSpacing: .5)),
-          backgroundColor: Colors.black,
-          behavior: SnackBarBehavior.floating,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            side: BorderSide(color: color.withOpacity(.6), width: 1),
-            borderRadius: BorderRadius.circular(6),
-          ),
-        ),
-      );
+    Toast.notify(context, msg, color: color);
   }
 
   static void _tracePing(BuildContext context) {

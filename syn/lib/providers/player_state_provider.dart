@@ -12,6 +12,7 @@ import '../models/settings.dart';
 import '../services/age_service.dart';
 import '../services/memory_engine_service.dart';
 import '../services/education_service.dart';
+import '../models/education_stage.dart';
 import '../models/action_log_entry.dart';
 import 'action_log_provider.dart';
 import '../models/app_screen.dart';
@@ -19,6 +20,7 @@ import 'app_screen_provider.dart';
 import '../widgets/life_stage_transition_modal.dart';
 import '../widgets/stat_stream.dart';
 import '../models/dynamic_modifiers.dart'; // Import the modifier model
+import '../models/education_focus.dart';
 
 // --- Riverpod Providers for Services ---
 final memoryEngineServiceProvider = Provider<MemoryEngineService>((ref) {
@@ -46,6 +48,21 @@ class PlayerStateNotifier extends StateNotifier<PlayerProfile> {
 
   PlayerStateNotifier(this._ref) : super(PlayerProfile.initial()) {
     loadPlayerProfile();
+  }
+
+  // --- Education operations ---
+  Future<void> enrollInSchool(String schoolId) async {
+    final educationService = _ref.read(educationServiceProvider);
+    try {
+      final updated = educationService.enrollInSchool(state, schoolId);
+      state = updated;
+    } catch (e) {
+      debugPrint('Enroll failed: $e');
+    }
+  }
+
+  void setEducationFocus(EducationFocus focus) {
+    state = state.copyWith(educationFocus: focus);
   }
 
   void showLifeStageTransition(BuildContext context, int oldAge, int newAge) {
@@ -214,12 +231,26 @@ class PlayerStateNotifier extends StateNotifier<PlayerProfile> {
     PlayerProfile profileForAging = state.copyWith(activeModifiers: nextYearModifiers);
     
     final ageService = _ref.read(ageServiceProvider);
+    final educationService = _ref.read(educationServiceProvider);
     final appSettings = _ref.read(appSettingsProvider);
     final ageUpResult = await ageService.processNewYear(
       currentPlayerProfile: profileForAging,
       currentAppSettings: appSettings,
     );
     
+    // Handle end-of-life transition immediately
+    if (ageUpResult.isDeceased) {
+      final int finalAge = ageUpResult.newAge;
+      PlayerProfile deceasedProfile = profileForAging.copyWith(
+        age: finalAge,
+        currentPhase: GamePhase.summary,
+        clearCurrentMemoryEvent: true,
+      );
+      state = deceasedProfile;
+      _ref.read(appScreenProvider.notifier).resetTo(AppScreen.dashboard);
+      return;
+    }
+
     final int newAge = ageUpResult.newAge;
 
     final LifeStage oldStage = getLifeStage(oldAge);
@@ -230,7 +261,48 @@ class PlayerStateNotifier extends StateNotifier<PlayerProfile> {
     }
 
     PlayerProfile newProfile = profileForAging.copyWith(age: newAge);
-    MemoryEvent? finalEventForYear = ageUpResult.newEvent ?? newProfile.currentMemoryEvent;
+
+    // Education progression (auto-enroll through high school)
+    if ((newProfile.currentSchoolId == null || newProfile.currentEducationStage == EducationStage.none) &&
+        newProfile.currentEducationStage != EducationStage.graduatedHighSchool) {
+      // Stages to auto-enroll before post-secondary options
+      final autoStages = <EducationStage>[
+        EducationStage.preschool,
+        EducationStage.elementarySchool,
+        EducationStage.middleSchool,
+        EducationStage.highSchool,
+      ];
+
+      // Choose the most advanced stage suitable for the player's age
+      for (final stage in autoStages.reversed) {
+        // Skip if already completed this stage
+        if (newProfile.completedEducationStages.contains(stage)) continue;
+
+        final school = educationService.getSchoolByStage(stage);
+        if (school != null && newAge >= school.minAgeToEnroll) {
+          newProfile = educationService.enrollInSchool(newProfile, school.id);
+          break; // enroll only one stage at a time
+        }
+      }
+    }
+
+    // Process yearly education progression (handles graduation updates and effects)
+    final eduResult = educationService.progressYearInEducation(newProfile);
+    newProfile = eduResult.updatedProfileBase;
+
+    // Apply yearly school effects based on focus
+    if (eduResult.yearlyEffects != null && eduResult.yearlyEffects!.isNotEmpty) {
+      final newStats = _applyStatEffects(newProfile.stats, eduResult.yearlyEffects!);
+      newProfile = newProfile.copyWith(stats: newStats);
+    }
+
+    if (eduResult.graduationEffects != null && eduResult.graduationEffects!.isNotEmpty) {
+      final newStats = _applyStatEffects(newProfile.stats, eduResult.graduationEffects!);
+      newProfile = newProfile.copyWith(stats: newStats);
+    }
+
+    // Determine event for the year, preferring age-driven event, then education-triggered event
+    MemoryEvent? finalEventForYear = ageUpResult.newEvent ?? eduResult.triggeredEvent ?? newProfile.currentMemoryEvent;
     newProfile = newProfile.copyWith(currentMemoryEvent: finalEventForYear);
 
     if (newProfile.currentMemoryEvent != null) {

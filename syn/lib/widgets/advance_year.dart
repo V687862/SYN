@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../ui/syn_kit.dart';
 import '../providers/player_state_provider.dart';
 
 class AdvanceYearButton extends ConsumerWidget {
@@ -21,37 +22,14 @@ class AdvanceYearButton extends ConsumerWidget {
       message: isDisabled
           ? "Resolve the current event before advancing the year."
           : "Advance your life by one year.",
-      child: ElevatedButton.icon(
-        icon: const Icon(Icons.fast_forward_rounded),
-        label: const Text("Advance Year"),
+      child: DivButton(
+        label: 'ADVANCE YEAR',
+        icon: Icons.fast_forward_rounded,
         onPressed: isDisabled
             ? null
             : () {
-                ref
-                    .read(playerStateProvider.notifier)
-                    .advanceYear(context: context);
+                ref.read(playerStateProvider.notifier).advanceYear(context: context);
               },
-        style: theme.elevatedButtonTheme.style?.copyWith(
-          backgroundColor: WidgetStateProperty.resolveWith<Color?>(
-            (states) {
-              if (states.contains(WidgetState.disabled)) {
-                return Colors.grey[700];
-              }
-              return theme.colorScheme.secondary;
-            },
-          ),
-          minimumSize: WidgetStateProperty.all(
-            const Size(double.infinity, 50),
-          ),
-          padding: WidgetStateProperty.all(
-            const EdgeInsets.symmetric(vertical: 16),
-          ),
-          shape: WidgetStateProperty.all(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-          ),
-        ),
       ),
     );
   }

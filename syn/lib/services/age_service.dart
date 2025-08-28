@@ -12,6 +12,8 @@ import 'memory_engine_service.dart';
 typedef AgeUpResult = ({
   int newAge,
   MemoryEvent? newEvent,
+  bool isDeceased,            // Indicates if the player died this year
+  String? deathReason,        // Optional reason such as 'old_age' or 'health_critical'
   // TODO: Expand AgeUpResult to include other yearly outcomes:
   // - List<String> yearlyMessages: General messages like "Happy Birthday!" or passive observations.
   // - List<NPCUpdate> npcUpdates: If NPCs age or their states change passively each year.
@@ -37,10 +39,27 @@ class AgeService {
     final int newAge = currentPlayerProfile.age + 1;
     print("AgeService: Player new age will be $newAge.");
 
-    // TODO: Implement end-of-life check.
-    //       If newAge exceeds a maximum lifespan or if player health is critical,
-    //       this method might return a special result indicating game over or transition to a summary phase.
-    //       Example: if (newAge > MAX_AGE || currentPlayerProfile.stats.health <= 0) { /* handle end of life */ }
+    // End-of-life check
+    const int maxAge = 100; // Default maximum age; consider moving to settings later
+    if (currentPlayerProfile.stats.health <= 0) {
+      print("AgeService: Player has died due to critical health.");
+      return (
+        newAge: newAge,
+        newEvent: null,
+        isDeceased: true,
+        deathReason: 'health_critical',
+      );
+    }
+
+    if (newAge > maxAge) {
+      print("AgeService: Player has reached end of life due to old age.");
+      return (
+        newAge: maxAge, // Cap age at max for summary consistency
+        newEvent: null,
+        isDeceased: true,
+        deathReason: 'old_age',
+      );
+    }
 
     // Create a temporary updated profile for fetching events,
     // as the MemoryEngineService might need the new age.
@@ -106,13 +125,15 @@ class AgeService {
     // returned as part of an expanded AgeUpResult. The PlayerStateNotifier would then
     // apply all these changes to the player's state.
 
-    // Return the results.
-    return (
-      newAge: newAge,
-      newEvent: newEvent,
-      // TODO: Populate other fields in AgeUpResult as they are implemented (yearlyMessages, npcUpdates etc.)
-    );
-  }
+      // Return the results.
+      return (
+        newAge: newAge,
+        newEvent: newEvent,
+        isDeceased: false,
+        deathReason: null,
+        // TODO: Populate other fields in AgeUpResult as they are implemented (yearlyMessages, npcUpdates etc.)
+      );
+    }
 
   // TODO: Consider adding other methods to AgeService if more complex age-related logic is needed.
   // For example:
