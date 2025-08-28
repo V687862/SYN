@@ -1,0 +1,97 @@
+[
+    {
+        "id": "seek_knowledge",
+        "label": "Seek Knowledge",
+        "description": "Uncover the world's secrets, from ancient myths to forbidden code. Your path is one of intellect and discovery."
+    },
+    {
+        "id": "achieve_fame",
+        "label": "Achieve Fame",
+        "description": "You crave the spotlight. Whether through art, influence, or infamy, you want your name to be known across the network."
+    },
+    {
+        "id": "build_connections",
+        "label": "Build Connections",
+        "description": "For you, life is about the people you share it with. Forge deep bonds of friendship, family, and romance."
+    },
+    {
+        "id": "experience_everything",
+        "label": "Experience Everything",
+        "description": "Life is a buffet, and you want to taste it all. Travel, take risks, and embrace the full spectrum of sensation."
+    },
+    {
+        "id": "master_a_craft",
+        "label": "Master a Craft",
+        "description": "Dedicate yourself to a single pursuit. Whether it's art, code, or a physical skill, excellence is its own reward."
+    },
+    {
+        "id": "amass_wealth",
+        "label": "Amass Wealth",
+        "description": "Money is power. Build a financial empire, control the market, and enjoy the security that only wealth can provide."
+    },
+    {
+        "id": "fight_for_a_cause",
+        "label": "Fight for a Cause",
+        "description": "You're driven by a need to change the world. Champion the underdog and challenge the status quo, no matter the cost."
+    },
+    {
+        "id": "seek_transcendence",
+        "label": "Seek Transcendence",
+        "description": "The limits of flesh and bone are not for you. Pursue physical, spiritual, or digital evolution to become something more."
+    },
+    {
+        "id": "survive_at_all_costs",
+        "label": "Survive at All Costs",
+        "description": "The world is a dangerous place. Your primary focus is on resilience, security, and making it through another day."
+    },
+    {
+        "id": "create_legacy",
+        "label": "Create a Legacy",
+        "description": "You want to leave your mark on the world. Build something that will outlast you, whether it's a family, a business, or a movement."
+    },
+    {
+        "id": "explore_the_unknown",
+        "label": "Explore the Unknown",
+        "description": "The mysteries of the universe call to you. Venture into uncharted territories, both physical and digital, to discover what lies beyond."
+    },
+    {
+        "id": "pursue_justice",
+        "label": "Pursue Justice",
+        "description": "You believe in fairness and equality. Stand up against corruption and fight for the rights of those who cannot fight for themselves."
+    },
+    {
+        "id": "embrace_change",
+        "label": "Embrace Change",
+        "description": "The only constant is change. Adapt, evolve, and thrive in a world that is always shifting beneath your feet."
+    },
+    {
+        "id": "cultivate_wisdom",
+        "label": "Cultivate Wisdom",
+        "description": "Knowledge is power, but wisdom is understanding. Seek to learn not just facts, but the deeper truths of existence."
+    },
+    {
+        "id": "nurture_creativity",
+        "label": "Nurture Creativity",
+        "description": "Your mind is a wellspring of ideas. Create, innovate, and express yourself in ways that inspire others."
+    },
+    {
+        "id": "foster_community",
+        "label": "Foster Community",
+        "description": "You believe in the strength of unity. Build and support communities that uplift and empower their members."
+    },
+    {
+        "id": "pursue_harmony",
+        "label": "Pursue Harmony",
+        "description": "Balance is key. Strive for peace within yourself and with the world around you, seeking to create a better future for all."
+    },
+    {
+        "id": "seek_adventure",
+        "label": "Seek Adventure",
+        "description": "Life is an adventure waiting to be had. Embrace spontaneity, thrill, and the unexpected in your journey."
+    },
+    {
+        "id": "protect_the_vulnerable",
+        "label": "Protect the Vulnerable",
+        "description": "You have a strong sense of duty to those who cannot protect themselves. Stand as a guardian against injustice and harm."
+    }
+]

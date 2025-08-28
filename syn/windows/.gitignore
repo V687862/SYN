@@ -1,0 +1,65 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+.pub/
+build/
+**/build/
+
+# Flutter generated files
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Android
+android/.gradle/
+android/local.properties
+android/**/local.properties
+**/*.keystore
+**/*.jks
+key.properties
+
+# iOS / macOS
+ios/Pods/
+ios/Flutter/ephemeral/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+*.xcworkspace
+DerivedData/
+*.xcuserstate
+
+# Windows (Visual Studio / CMake)
+.vs/
+*.suo
+*.user
+*.VC.db
+*.vcxproj.user
+Debug/
+Release/
+cmake-build-*/
+windows/flutter/ephemeral/
+
+# Linux (CMake, build outputs)
+cmake-build-*/
+*.o
+*.so
+*.a
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Logs / temp
+*.log
+*.tmp
+*.bak
+.DS_Store
+thumbs.db
+
+# Secret / config (uncomment to treat as private)
+# android/app/google-services.json
+# ios/GoogleService-Info.plist
+# lib/firebase_options.dart
+# .env

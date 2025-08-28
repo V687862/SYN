@@ -1,0 +1,264 @@
+[
+    {
+        "id": "first_day_elementary",
+        "ageRange": [
+            6,
+            6
+        ],
+        "tags": [
+            "education",
+            "social",
+            "childhood"
+        ],
+        "summary": "Your first day of elementary school.",
+        "description": "Clutching your new backpack, you walk into the bustling classroom. The teacher, Ms. Davison, smiles warmly. So many new faces!",
+        "choices": [
+            {
+                "id": "sit_alone",
+                "text": "Find an empty desk and sit quietly.",
+                "effects": {
+                    "charisma": -1,
+                    "creativity": 1,
+                    "confidence": -2
+                },
+                "outcomeDescription": "You observe everyone from your quiet corner, lost in your thoughts."
+            },
+            {
+                "id": "talk_to_someone",
+                "text": "Try to talk to the kid with the cool dinosaur shirt.",
+                "effects": {
+                    "charisma": 2,
+                    "intelligence": 1,
+                    "confidence": 5
+                },
+                "outcomeDescription": "You make a new friend, Alex, who also loves dinosaurs!",
+                "relationshipEffects": [
+                    {
+                        "targetType": "role_new",
+                        "targetValue": "friend",
+                        "npcName": "Alex",
+                        "npcAge": 6,
+                        "affectionChange": 15,
+                        "trustChange": 10
+                    }
+                ]
+            },
+            {
+                "id": "cry_for_parent",
+                "text": "Feel overwhelmed and start to cry.",
+                "effects": {
+                    "health": -1,
+                    "charisma": -2,
+                    "confidence": -5
+                },
+                "outcomeDescription": "Ms. Davison comforts you, and eventually, the tears stop."
+            }
+        ]
+    },
+    {
+        "id": "found_interesting_book",
+        "ageRange": [
+            8,
+            12
+        ],
+        "tags": [
+            "curiosity",
+            "intellectual",
+            "childhood"
+        ],
+        "summary": "You find a fascinating book in the library.",
+        "description": "While browsing the library shelves, a dusty old book with strange symbols on its cover catches your eye. It seems to be about ancient myths.",
+        "effects": {
+            "intelligence": 3,
+            "creativity": 2
+        },
+        "choices": [
+            {
+                "id": "read_it",
+                "text": "Check it out and read it eagerly.",
+                "outcomeDescription": "The book is filled with captivating stories and expands your imagination.",
+                "flagsSet": [
+                    "read_myth_book"
+                ]
+            },
+            {
+                "id": "show_librarian",
+                "text": "Show it to the librarian.",
+                "effects": {
+                    "morality": 1
+                },
+                "outcomeDescription": "The librarian smiles and tells you it's a very special collection, guiding you to other interesting reads."
+            }
+        ]
+    },
+    {
+        "id": "caught_drawing_nsfw",
+        "ageRange": [
+            13,
+            16
+        ],
+        "tags": [
+            "sexual",
+            "shame",
+            "creative",
+            "risk"
+        ],
+        "summary": "A drawing you made gets you in trouble.",
+        "description": "You were sketching something rather... suggestive in your notebook during a boring class. Unfortunately, the teacher noticed and confiscated it.",
+        "nsfw": true,
+        "choices": [
+            {
+                "id": "apologize_profusely",
+                "text": "Apologize profusely and feign innocence.",
+                "effects": {
+                    "morality": -1,
+                    "charisma": 1,
+                    "libido": 1
+                },
+                "outcomeDescription": "The teacher seems skeptical but lets you off with a warning, though your drawing is kept."
+            },
+            {
+                "id": "defiant_shrug",
+                "text": "Shrug defiantly. It's just art.",
+                "effects": {
+                    "morality": -2,
+                    "creativity": 1,
+                    "libido": 2
+                },
+                "flagsSet": [
+                    "artistic_rebel"
+                ],
+                "outcomeDescription": "You earn a detention slip and a stern lecture about appropriate classroom behavior. Your libido feels a little more validated, though."
+            },
+            {
+                "id": "feel_deep_shame",
+                "text": "Feel a wave of intense shame and embarrassment.",
+                "effects": {
+                    "libido": -2,
+                    "health": -1,
+                    "morality": 1
+                },
+                "outcomeDescription": "You can't look anyone in the eye for the rest of the day."
+            }
+        ]
+    },
+    {
+        "id": "first_crush_confession_attempt",
+        "ageRange": [
+            14,
+            17
+        ],
+        "tags": [
+            "social",
+            "romantic",
+            "risk",
+            "teen"
+        ],
+        "summary": "You decide to confess to your crush.",
+        "description": "Your heart pounds. You've decided today's the day you'll tell [CrushName] how you feel. You find them alone by their locker.",
+        "choices": [
+            {
+                "id": "confess_directly",
+                "text": "Take a deep breath and tell them directly.",
+                "effects": {
+                    "charisma": 2,
+                    "libido": 3
+                },
+                "outcomeDescription": "Their reaction is unreadable at first...",
+                "triggeredEventId": "crush_reaction_to_confession"
+            },
+            {
+                "id": "chicken_out",
+                "text": "Lose your nerve at the last second.",
+                "effects": {
+                    "charisma": -2,
+                    "libido": -1,
+                    "health": -1
+                },
+                "outcomeDescription": "You mumble something about the homework and walk away, kicking yourself."
+            }
+        ]
+    },
+    {
+        "id": "crush_reaction_to_confession",
+        "ageRange": [
+            14,
+            17
+        ],
+        "tags": [
+            "social",
+            "romantic",
+            "consequence",
+            "hidden"
+        ],
+        "summary": "Your crush reacts to your confession.",
+        "description": "[CrushName] looks surprised, then a slow smile spreads across their face. 'I... I feel the same way,' they admit.",
+        "effects": {
+            "health": 5,
+            "libido": 5,
+            "charisma": 3
+        },
+        "flagsSet": [
+            "in_a_relationship"
+        ],
+        "relationshipEffects": [
+            {
+                "targetType": "role_update_or_create",
+                "targetValue": "crush_name_variable",
+                "newRole": "lover",
+                "affectionChange": 50,
+                "trustChange": 30,
+                "sexCompatibilityChange": 20
+            }
+        ]
+    },
+    {
+        "id": "graduation_high_school_party",
+        "ageRange": [
+            17,
+            18
+        ],
+        "tags": [
+            "education",
+            "social",
+            "milestone",
+            "party"
+        ],
+        "summary": "You attend your high school graduation party.",
+        "description": "Music thumps, and the air is electric with excitement. You've graduated high school! The future feels wide open.",
+        "effects": {
+            "health": 2,
+            "charisma": 1
+        },
+        "choices": [
+            {
+                "id": "party_hard",
+                "text": "Let loose and party hard all night.",
+                "effects": {
+                    "libido": 3,
+                    "health": -2,
+                    "morality": -1
+                },
+                "outcomeDescription": "It's a wild night you'll (mostly) remember. You wake up with a headache but some fun memories."
+            },
+            {
+                "id": "meaningful_conversations",
+                "text": "Spend time having meaningful conversations with friends.",
+                "effects": {
+                    "charisma": 2,
+                    "intelligence": 1
+                },
+                "outcomeDescription": "You share hopes and dreams for the future, strengthening your bonds."
+            },
+            {
+                "id": "leave_early",
+                "text": "Make an appearance and then leave early.",
+                "effects": {
+                    "health": 1,
+                    "morality": 1
+                },
+                "outcomeDescription": "You prefer a quiet celebration of your achievement."
+            }
+        ]
+    }
+]

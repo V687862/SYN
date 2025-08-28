@@ -1,0 +1,46 @@
+[
+  {
+    "id": "woman",
+    "label": "Woman"
+  },
+  {
+    "id": "man",
+    "label": "Man"
+  },
+  {
+    "id": "non_binary",
+    "label": "Non-binary"
+  },
+  {
+    "id": "trans_woman",
+    "label": "Trans Woman"
+  },
+  {
+    "id": "trans_man",
+    "label": "Trans Man"
+  },
+  {
+    "id": "agender",
+    "label": "Agender"
+  },
+  {
+    "id": "genderfluid",
+    "label": "Genderfluid"
+  },
+  {
+    "id": "genderqueer",
+    "label": "Genderqueer"
+  },
+  {
+    "id": "two_spirit",
+    "label": "Two-Spirit"
+  },
+  {
+    "id": "questioning",
+    "label": "Questioning"
+  },
+  {
+    "id": "other",
+    "label": "Other / Self-Describe"
+  }
+]
