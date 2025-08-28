@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/settings.dart';
 import '../providers/player_state_provider.dart';
 import '../providers/app_screen_provider.dart';
+import '../ui/syn_kit.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -25,81 +26,114 @@ class SettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16.0),
         children: [
           _SettingsSectionHeader(title: 'Gameplay'),
-          _SettingsSwitchTile(
-            title: 'Show Tutorial Hints',
-            subtitle: 'Display helpful tips for new players.',
-            value: settings.gameplay.showTutorialHints,
-            onChanged: (newValue) {
-              settingsNotifier.update((s) =>
-                  s.copyWith(gameplay: s.gameplay.copyWith(showTutorialHints: newValue)));
-            },
+          const SizedBox(height: 8),
+          GhostPanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SettingsSwitchTile(
+                  title: 'Show Tutorial Hints',
+                  subtitle: 'Display helpful tips for new players.',
+                  value: settings.gameplay.showTutorialHints,
+                  onChanged: (newValue) {
+                    settingsNotifier.update((s) => s.copyWith(
+                        gameplay: s.gameplay.copyWith(showTutorialHints: newValue)));
+                  },
+                ),
+                const SizedBox(height: 8),
+                const ThinDivider(),
+                const SizedBox(height: 8),
+                _SettingsDropdownTile<AgingPace>(
+                  title: 'Aging Pace',
+                  subtitle: 'Control how quickly time passes.',
+                  value: settings.gameplay.agingPace,
+                  items: AgingPace.values,
+                  onChanged: (newValue) {
+                    if (newValue != null) {
+                      settingsNotifier.update((s) => s.copyWith(
+                          gameplay: s.gameplay.copyWith(agingPace: newValue)));
+                    }
+                  },
+                  itemLabelBuilder: (pace) => formatEnumName(pace.name),
+                ),
+              ],
+            ),
           ),
-          _SettingsDropdownTile<AgingPace>(
-            title: 'Aging Pace',
-            subtitle: 'Control how quickly time passes.',
-            value: settings.gameplay.agingPace,
-            items: AgingPace.values,
-            onChanged: (newValue) {
-              if (newValue != null) {
-                settingsNotifier.update((s) =>
-                    s.copyWith(gameplay: s.gameplay.copyWith(agingPace: newValue)));
-              }
-            },
-            itemLabelBuilder: (pace) => formatEnumName(pace.name),
-          ),
-          const Divider(height: 30),
 
+          const SizedBox(height: 18),
           _SettingsSectionHeader(title: 'Content'),
-          _SettingsSwitchTile(
-            title: 'Enable NSFW Content',
-            subtitle: 'Allows for mature themes and events. (18+)',
-            value: settings.nsfwEnabled,
-            onChanged: (newValue) {
-              settingsNotifier.update((s) => s.copyWith(nsfwEnabled: newValue));
-            },
+          const SizedBox(height: 8),
+          GhostPanel(
+            child: _SettingsSwitchTile(
+              title: 'Enable NSFW Content',
+              subtitle: 'Allows for mature themes and events. (18+)',
+              value: settings.nsfwEnabled,
+              onChanged: (newValue) {
+                settingsNotifier.update((s) => s.copyWith(nsfwEnabled: newValue));
+              },
+            ),
           ),
-          const Divider(height: 30),
 
+          const SizedBox(height: 18),
           _SettingsSectionHeader(title: 'Audio'),
-          _SettingsSliderTile(
-            label: 'Master Volume',
-            value: settings.audio.masterVolume,
-            onChanged: (v) => settingsNotifier.update((s) =>
-                s.copyWith(audio: s.audio.copyWith(masterVolume: v))),
+          const SizedBox(height: 8),
+          GhostPanel(
+            child: Column(
+              children: [
+                _SettingsSliderTile(
+                  label: 'Master Volume',
+                  value: settings.audio.masterVolume,
+                  onChanged: (v) => settingsNotifier.update((s) =>
+                      s.copyWith(audio: s.audio.copyWith(masterVolume: v))),
+                ),
+                const ThinDivider(),
+                _SettingsSliderTile(
+                  label: 'Music',
+                  value: settings.audio.musicVolume,
+                  onChanged: (v) => settingsNotifier.update((s) =>
+                      s.copyWith(audio: s.audio.copyWith(musicVolume: v))),
+                ),
+                const ThinDivider(),
+                _SettingsSliderTile(
+                  label: 'Sound Effects',
+                  value: settings.audio.sfxVolume,
+                  onChanged: (v) => settingsNotifier.update((s) =>
+                      s.copyWith(audio: s.audio.copyWith(sfxVolume: v))),
+                ),
+              ],
+            ),
           ),
-          _SettingsSliderTile(
-            label: 'Music',
-            value: settings.audio.musicVolume,
-            onChanged: (v) => settingsNotifier.update((s) =>
-                s.copyWith(audio: s.audio.copyWith(musicVolume: v))),
-          ),
-          _SettingsSliderTile(
-            label: 'Sound Effects',
-            value: settings.audio.sfxVolume,
-            onChanged: (v) => settingsNotifier.update((s) =>
-                s.copyWith(audio: s.audio.copyWith(sfxVolume: v))),
-          ),
-          const Divider(height: 30),
 
+          const SizedBox(height: 18),
           _SettingsSectionHeader(title: 'Accessibility'),
-          _SettingsSwitchTile(
-            title: 'Reduced Motion',
-            subtitle: 'Disables non-essential animations and screen effects.',
-            value: settings.accessibility.reducedMotion,
-            onChanged: (newValue) {
-              settingsNotifier.update((s) => s.copyWith(
-                  accessibility: s.accessibility.copyWith(reducedMotion: newValue)));
-            },
-          ),
-          _SettingsSwitchTile(
-            title: 'Dyslexia-Friendly Font',
-            subtitle:
-                'Uses a font designed for better readability. (Requires app restart)',
-            value: settings.accessibility.dyslexiaMode,
-            onChanged: (newValue) {
-              settingsNotifier.update((s) => s.copyWith(
-                  accessibility: s.accessibility.copyWith(dyslexiaMode: newValue)));
-            },
+          const SizedBox(height: 8),
+          GhostPanel(
+            child: Column(
+              children: [
+                _SettingsSwitchTile(
+                  title: 'Reduced Motion',
+                  subtitle: 'Disables non-essential animations and screen effects.',
+                  value: settings.accessibility.reducedMotion,
+                  onChanged: (newValue) {
+                    settingsNotifier.update((s) => s.copyWith(
+                        accessibility: s.accessibility
+                            .copyWith(reducedMotion: newValue)));
+                  },
+                ),
+                const ThinDivider(),
+                _SettingsSwitchTile(
+                  title: 'Dyslexia-Friendly Font',
+                  subtitle:
+                      'Uses a font designed for better readability. (Requires app restart)',
+                  value: settings.accessibility.dyslexiaMode,
+                  onChanged: (newValue) {
+                    settingsNotifier.update((s) => s.copyWith(
+                        accessibility:
+                            s.accessibility.copyWith(dyslexiaMode: newValue)));
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -220,24 +254,49 @@ class _SettingsDropdownTile<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
-      ),
-      trailing: DropdownButton<T>(
-        value: value,
-        onChanged: onChanged,
-        items: items.map<DropdownMenuItem<T>>((T item) {
-          return DropdownMenuItem<T>(
-            value: item,
-            child: Text(itemLabelBuilder(item)),
-          );
-        }).toList(),
-        dropdownColor: theme.colorScheme.surface,
-        underline: const SizedBox(),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
+          ),
+          const SizedBox(height: 10),
+          DropdownButtonFormField<T>(
+            value: value,
+            onChanged: onChanged,
+            items: items
+                .map<DropdownMenuItem<T>>(
+                  (T item) => DropdownMenuItem<T>(
+                    value: item,
+                    child: Text(itemLabelBuilder(item)),
+                  ),
+                )
+                .toList(),
+            dropdownColor: theme.colorScheme.surface,
+            style: const TextStyle(color: Colors.white, fontSize: 16),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.black,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: Colors.white.withOpacity(.12), width: 1),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: theme.colorScheme.primary.withOpacity(.6), width: 1),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

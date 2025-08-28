@@ -58,7 +58,7 @@ class _DivinikoShell extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           const GridBackdrop(opacity: .06), // faint system grid
-          const CornerFrame(),              // corner ticks
+          // Corner frame disabled for a cleaner look
           const TraceCircleOverlay(),       // call .ping() from pages for confirm
           // Your page content
           SafeArea(child: child),

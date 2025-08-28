@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show FontFeature;
 import 'package:flutter/material.dart';
 
 /// -------------------------------------------------------------
@@ -10,6 +11,7 @@ import 'package:flutter/material.dart';
 /// - CornerFrame           : four thin corner ticks framing the screen or a box
 /// - GhostPanel            : flat black container with 1px outline
 /// - DivButton             : ghost buttons (primary/secondary/success/danger)
+///                          now supports `enabled`, `disabledReason`, and optional lock icon
 /// - DivIconButton         : circular icon button variant
 /// - DivSegmented          : segmented control / tabs (ghost pills)
 /// - ThinDivider           : faint 1px divider
@@ -17,9 +19,12 @@ import 'package:flutter/material.dart';
 /// - TitleHeader           : screen title (ALL CAPS) with system vibe
 /// - TraceCircleOverlay    : global confirm pulse overlay (call .ping())
 /// - Toast.notify()        : monochrome snackbar with colored border
+///   Toast.success/info/error() shortcuts
 /// - DivInputField         : minimal input (1px outline)
 /// - GhostListItem         : list row with chevron and optional subtitle
 /// - TimelineNode          : for timelines
+/// - StatPill              : for compact stat display
+/// - ModifierChip/Strip    : for dynamic buffs/debuffs row
 ///
 /// Example usage is shown at the bottom of this file in a demo widget
 /// (DemoScreen) that you can paste into your app and try immediately.
@@ -182,15 +187,38 @@ enum DivButtonVariant { primary, secondary, success, danger }
 enum DivButtonSize { sm, md, lg }
 
 class DivButton extends StatefulWidget {
-  final String label; final IconData? icon; final VoidCallback? onPressed; final DivButtonVariant variant; final DivButtonSize size; final bool fullWidth; final bool showChevron; final EdgeInsets? padding;
-  const DivButton({super.key, required this.label, this.icon, this.onPressed, this.variant = DivButtonVariant.primary, this.size = DivButtonSize.md, this.fullWidth = true, this.showChevron = true, this.padding});
+  final String label;
+  final IconData? icon;
+  final VoidCallback? onPressed;
+  final DivButtonVariant variant;
+  final DivButtonSize size;
+  final bool fullWidth;
+  final bool showChevron;
+  final EdgeInsets? padding;
+  final bool enabled;                 // new
+  final String? disabledReason;       // new
+  final bool showLockWhenDisabled;    // new
+  const DivButton({
+    super.key,
+    required this.label,
+    this.icon,
+    this.onPressed,
+    this.variant = DivButtonVariant.primary,
+    this.size = DivButtonSize.md,
+    this.fullWidth = true,
+    this.showChevron = true,
+    this.padding,
+    this.enabled = true,
+    this.disabledReason,
+    this.showLockWhenDisabled = true,
+  });
   @override
   State<DivButton> createState() => _DivButtonState();
 }
 
 class _DivButtonState extends State<DivButton> with SingleTickerProviderStateMixin {
   late final AnimationController _hover = AnimationController(vsync: this, duration: const Duration(milliseconds: 160));
-  bool get _enabled => widget.onPressed != null;
+  bool get _enabled => widget.onPressed != null && widget.enabled;
   @override
   void dispose(){ _hover.dispose(); super.dispose(); }
 
@@ -223,7 +251,8 @@ class _DivButtonState extends State<DivButton> with SingleTickerProviderStateMix
   @override
   Widget build(BuildContext context){
     final scheme = Theme.of(context).colorScheme; final accent = _accent(scheme); final baseBorder = Colors.white.withOpacity(.14);
-    return MouseRegion(
+    final contentBuilder = Builder(builder: (context) {
+      return MouseRegion(
       onEnter: (_) { if(_enabled) _hover.forward(); },
       onExit: (_) { if(_enabled) _hover.reverse(); },
       child: GestureDetector(
@@ -234,7 +263,8 @@ class _DivButtonState extends State<DivButton> with SingleTickerProviderStateMix
         child: AnimatedBuilder(
           animation: _hover,
           builder:(context, _){
-            final t = Curves.easeOut.transform(_hover.value);
+            final tBase = Curves.easeOut.transform(_hover.value);
+            final t = _enabled ? tBase : 0.0;
             final outline = Color.lerp(baseBorder, accent.withOpacity(.5), t)!;
             final glowOpacity = _enabled ? .18 * t : 0.0;
             final textColor = !_enabled ? Colors.white38 : Color.lerp(Colors.white70, Colors.white, t*.6)!;
@@ -257,7 +287,8 @@ class _DivButtonState extends State<DivButton> with SingleTickerProviderStateMix
                 children:[
                   SizedBox(width: 18, height: 2, child: CustomPaint(painter: _GrowLinePainter(progress: t, color: accent))),
                   const SizedBox(width: 10),
-                  if(widget.icon!=null) ...[ Icon(widget.icon, size: 20, color: textColor), const SizedBox(width: 8),],
+                  if(!_enabled && widget.showLockWhenDisabled) ...[ Icon(Icons.lock_outline, size: 18, color: textColor), const SizedBox(width: 8) ]
+                  else if(widget.icon!=null) ...[ Icon(widget.icon, size: 20, color: textColor), const SizedBox(width: 8),],
                   if (widget.fullWidth)
                     Expanded(child: label)
                   else
@@ -279,6 +310,18 @@ class _DivButtonState extends State<DivButton> with SingleTickerProviderStateMix
           },
         ),
       ),
+    );
+    });
+
+    final child = widget.disabledReason != null
+        ? Tooltip(message: widget.disabledReason!, child: contentBuilder)
+        : contentBuilder;
+
+    return Semantics(
+      button: true,
+      enabled: _enabled,
+      label: widget.label,
+      child: child,
     );
   }
 }
@@ -463,12 +506,104 @@ class Toast {
         ),
       );
   }
+  static void success(BuildContext context, String msg) =>
+      notify(context, msg, color: const Color(0xFF2ECC71));
+  static void info(BuildContext context, String msg) =>
+      notify(context, msg, color: Theme.of(context).colorScheme.primary);
+  static void error(BuildContext context, String msg) =>
+      notify(context, msg, color: Theme.of(context).colorScheme.error);
 }
 
 /* ======================= PAINTER (shared) ======================= */
 class _GrowLinePainter extends CustomPainter { final double progress; final Color color; _GrowLinePainter({required this.progress, required this.color});
   @override void paint(Canvas canvas, Size size){ final p = Paint()..color = color..style = PaintingStyle.stroke..strokeWidth = size.height..strokeCap = StrokeCap.square; canvas.drawLine(Offset.zero, Offset(size.width*progress, 0), p);} 
   @override bool shouldRepaint(covariant _GrowLinePainter old)=> old.progress!=progress || old.color!=color; }
+
+/* ======================= STATS & MODIFIERS ======================= */
+enum ModifierKind { buff, debuff, neutral }
+
+class StatPill extends StatelessWidget {
+  final String label;
+  final int value; // 0-100 typical, but agnostic
+  final IconData? icon;
+  final Color? color;
+  final bool hidden; // when true, show obfuscated styling
+  const StatPill({super.key, required this.label, required this.value, this.icon, this.color, this.hidden = false});
+  @override
+  Widget build(BuildContext context){
+    final c = color ?? Theme.of(context).colorScheme.primary;
+    final textColor = hidden ? Colors.white38 : Colors.white;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: hidden ? Colors.white24 : c.withOpacity(.6), width: 1),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children:[
+        if(icon!=null) ...[ Icon(icon, size: 14, color: textColor), const SizedBox(width: 6) ],
+        Text(label.toUpperCase(), style: TextStyle(color: textColor, fontSize: 11, letterSpacing: 1.1, fontWeight: FontWeight.w700)),
+        const SizedBox(width: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: hidden ? Colors.white10 : c.withOpacity(.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(hidden ? '— —' : '$value', style: TextStyle(color: textColor, fontSize: 11, fontFeatures: const [FontFeature.tabularFigures()])),
+        ),
+      ]),
+    );
+  }
+}
+
+class ModifierChip extends StatelessWidget {
+  final String label;
+  final ModifierKind kind;
+  final IconData? icon;
+  const ModifierChip({super.key, required this.label, this.kind = ModifierKind.neutral, this.icon});
+  @override
+  Widget build(BuildContext context){
+    Color kcolor(){
+      switch(kind){
+        case ModifierKind.buff: return const Color(0xFF2ECC71);
+        case ModifierKind.debuff: return SynTheme.danger;
+        case ModifierKind.neutral: return Colors.white70;
+      }
+    }
+    final c = kcolor();
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: c.withOpacity(.6), width: 1),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children:[
+        if(icon!=null) ...[ Icon(icon, size: 14, color: Colors.white70), const SizedBox(width: 6) ],
+        Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
+      ]),
+    );
+  }
+}
+
+class ModifiersStrip extends StatelessWidget {
+  final List<ModifierChip> modifiers;
+  final Axis scrollDirection;
+  const ModifiersStrip({super.key, required this.modifiers, this.scrollDirection = Axis.horizontal});
+  @override
+  Widget build(BuildContext context){
+    return SingleChildScrollView(
+      scrollDirection: scrollDirection,
+      child: Row(children:[
+        for (int i=0;i<modifiers.length;i++) ...[
+          if(i>0) const SizedBox(width: 6),
+          modifiers[i],
+        ]
+      ]),
+    );
+  }
+}
 
 /* ======================= DEMO SCREEN (optional) ======================= */
 class DemoScreen extends StatefulWidget { const DemoScreen({super.key}); @override State<DemoScreen> createState()=>_DemoScreenState(); }
@@ -480,7 +615,7 @@ class _DemoScreenState extends State<DemoScreen> {
       child: Scaffold(
         body: Stack(children:[
           const GridBackdrop(opacity: .06),
-          const CornerFrame(),
+          // CornerFrame removed for parity with app shell
           const TraceCircleOverlay(),
           SafeArea(
             child: Center(
