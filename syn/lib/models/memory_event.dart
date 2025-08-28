@@ -41,6 +41,7 @@ class EventChoice {
     List<String>? flagsRemoved,
     String? triggeredEventId,
     List<Map<String, dynamic>>? relationshipEffects,
+    Map<String, int>? driveAffinity,
   }) {
     return EventChoice(
       id: id ?? this.id,
@@ -51,6 +52,7 @@ class EventChoice {
       flagsRemoved: flagsRemoved ?? this.flagsRemoved,
       triggeredEventId: triggeredEventId ?? this.triggeredEventId,
       relationshipEffects: relationshipEffects ?? this.relationshipEffects,
+      driveAffinity: driveAffinity ?? this.driveAffinity,
     );
   }
 
@@ -88,6 +90,7 @@ class EventChoice {
       if (flagsRemoved != null) 'flagsRemoved': flagsRemoved,
       if (triggeredEventId != null) 'triggeredEventId': triggeredEventId,
       if (relationshipEffects != null) 'relationshipEffects': relationshipEffects,
+      if (driveAffinity != null) 'driveAffinity': driveAffinity,
     };
   }
 
