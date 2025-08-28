@@ -139,7 +139,6 @@ class _LifeStageTransitionModalState
             Text(
               "NEW PHASE: ${newStage.name.toUpperCase()}",
               style: theme.textTheme.headlineSmall?.copyWith(
-                fontFamily: 'Orbitron',
                 color: theme.colorScheme.secondary,
               ),
               maxLines: 1,
@@ -159,7 +158,6 @@ class _LifeStageTransitionModalState
             Text(
               "CORE STATS EVOLVED",
               style: theme.textTheme.labelLarge?.copyWith(
-                fontFamily: 'Orbitron',
                 letterSpacing: 1.5,
                 color: Colors.white70,
               ),

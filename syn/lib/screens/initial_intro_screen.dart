@@ -1,9 +1,9 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_screen_provider.dart';
 import '../models/app_screen.dart';
 import '../widgets/static_starfield.dart';
+import '../ui/syn_kit.dart';
 
 class InitialIntroScreen extends ConsumerStatefulWidget {
   const InitialIntroScreen({super.key});
@@ -20,11 +20,6 @@ class _InitialIntroScreenState extends ConsumerState<InitialIntroScreen>
   double _opacityButton = 0.0;
   double _titleScale = 0.96;
 
-  late final AnimationController _traceCtrl = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 700),
-  );
-
   @override
   void initState() {
     super.initState();
@@ -33,7 +28,6 @@ class _InitialIntroScreenState extends ConsumerState<InitialIntroScreen>
 
   @override
   void dispose() {
-    _traceCtrl.dispose();
     super.dispose();
   }
 
@@ -55,9 +49,7 @@ class _InitialIntroScreenState extends ConsumerState<InitialIntroScreen>
   }
 
   void _pingTrace() {
-    _traceCtrl
-      ..reset()
-      ..forward();
+    TraceCircleOverlay.of(context)?.ping();
   }
 
   @override
@@ -111,9 +103,6 @@ class _InitialIntroScreenState extends ConsumerState<InitialIntroScreen>
               ),
             ),
 
-            // Corner ticks (thin cyan lines)
-            const _CornerLines(),
-
             // Content
             Center(
               child: Padding(
@@ -131,20 +120,6 @@ class _InitialIntroScreenState extends ConsumerState<InitialIntroScreen>
                     ],
                   ),
                 ),
-              ),
-            ),
-
-            // Confirm trace overlay
-            IgnorePointer(
-              ignoring: true,
-              child: AnimatedBuilder(
-                animation: _traceCtrl,
-                builder: (context, _) {
-                  return CustomPaint(
-                    painter: _TraceCirclePainter(progress: Curves.easeInOut.transform(_traceCtrl.value)),
-                    child: const SizedBox.expand(),
-                  );
-                },
               ),
             ),
           ],
@@ -222,198 +197,18 @@ class _InitialIntroScreenState extends ConsumerState<InitialIntroScreen>
     return AnimatedOpacity(
       opacity: _opacityButton,
       duration: const Duration(milliseconds: 700),
-      child: _GhostButton(
+      child: DivButton(
         label: 'BEGIN',
+        icon: Icons.play_arrow,
         onPressed: () {
-          // pulse + navigate
           _pingTrace();
           ref.read(appScreenProvider.notifier).resetTo(AppScreen.mainMenu);
         },
+        fullWidth: false,
+        showChevron: false,
       ),
     );
   }
 }
 
-/* ----------------- Supporting visuals ----------------- */
-
-class _GhostButton extends StatefulWidget {
-  final String label;
-  final VoidCallback onPressed;
-  const _GhostButton({required this.label, required this.onPressed});
-
-  @override
-  State<_GhostButton> createState() => _GhostButtonState();
-}
-
-class _GhostButtonState extends State<_GhostButton> with SingleTickerProviderStateMixin {
-  static const accent = Color(0xFF00E5FF);
-  late final AnimationController _hover = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 180),
-    lowerBound: 0,
-    upperBound: 1,
-  );
-
-  @override
-  void dispose() {
-    _hover.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => _hover.forward(),
-      onExit: (_) => _hover.reverse(),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: (_) => _hover.forward(),
-        onTapCancel: () => _hover.reverse(),
-        onTapUp: (_) {
-          _hover.reverse();
-          widget.onPressed();
-        },
-        child: AnimatedBuilder(
-          animation: _hover,
-          builder: (context, _) {
-            final t = Curves.easeOut.transform(_hover.value);
-            return Container(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(50),
-                border: Border.all(color: Colors.white.withOpacity(.14 + .18 * t), width: 1),
-                boxShadow: [
-                  BoxShadow(color: accent.withOpacity(.18 * t), blurRadius: 18 * t, spreadRadius: .6),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 18,
-                    height: 2,
-                    child: CustomPaint(painter: _GrowLinePainter(progress: t, color: accent)),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'BEGIN',
-                    style: TextStyle(
-                      fontSize: 18,
-                      letterSpacing: 2,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _CornerLines extends StatelessWidget {
-  const _CornerLines();
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(child: CustomPaint(painter: _CornerPainter()));
-  }
-}
-
-class _CornerPainter extends CustomPainter {
-  static const accent = Color(0xFF00E5FF);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final p = Paint()
-      ..color = accent.withOpacity(.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    const len = 34.0;
-    // TL
-    canvas.drawLine(const Offset(16, 16), const Offset(16 + len, 16), p);
-    canvas.drawLine(const Offset(16, 16), const Offset(16, 16 + len), p);
-    // TR
-    canvas.drawLine(Offset(size.width - 16, 16), Offset(size.width - 16 - len, 16), p);
-    canvas.drawLine(Offset(size.width - 16, 16), Offset(size.width - 16, 16 + len), p);
-    // BL
-    canvas.drawLine(Offset(16, size.height - 16), Offset(16 + len, size.height - 16), p);
-    canvas.drawLine(Offset(16, size.height - 16), Offset(16, size.height - 16 - len), p);
-    // BR
-    canvas.drawLine(
-      Offset(size.width - 16, size.height - 16),
-      Offset(size.width - 16 - len, size.height - 16),
-      p,
-    );
-    canvas.drawLine(
-      Offset(size.width - 16, size.height - 16),
-      Offset(size.width - 16, size.height - 16 - len),
-      p,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _CornerPainter old) => false;
-}
-
-class _TraceCirclePainter extends CustomPainter {
-  final double progress; // 0..1
-  _TraceCirclePainter({required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (progress <= 0) return;
-    final shortest = math.min(size.width, size.height);
-    final radius = shortest * .28;
-    final center = Offset(size.width * .82, size.height * .18);
-    const accent = Color(0xFF00E5FF);
-
-    final guide = Paint()
-      ..color = Colors.white.withOpacity(.04)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    canvas.drawCircle(center, radius, guide);
-
-    final arc = Paint()
-      ..color = accent
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-
-    const start = -math.pi / 2;
-    final sweep = 2 * math.pi * progress;
-    canvas.drawArc(Rect.fromCircle(center: center, radius: radius), start, sweep, false, arc);
-
-    final endAngle = start + sweep;
-    final end = Offset(center.dx + radius * math.cos(endAngle), center.dy + radius * math.sin(endAngle));
-    canvas.drawCircle(end, 2.2, Paint()..color = accent.withOpacity(.9));
-  }
-
-  @override
-  bool shouldRepaint(covariant _TraceCirclePainter old) => old.progress != progress;
-}
-
-class _GrowLinePainter extends CustomPainter {
-  final double progress;
-  final Color color;
-  _GrowLinePainter({required this.progress, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = size.height
-      ..strokeCap = StrokeCap.square;
-    canvas.drawLine(Offset.zero, Offset(size.width * progress, 0), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _GrowLinePainter old) =>
-      old.progress != progress || old.color != color;
-}
+/* No additional painters: chrome comes from the global shell (SynKit). */

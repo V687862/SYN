@@ -122,7 +122,6 @@ class _SettingsSectionHeader extends StatelessWidget {
           title.toUpperCase(),
           style: TextStyle(
             color: theme.colorScheme.secondary,
-            fontFamily: 'Orbitron',
             fontSize: 16,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,

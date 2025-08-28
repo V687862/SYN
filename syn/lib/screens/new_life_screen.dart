@@ -16,6 +16,7 @@ import '../providers/static_data_providers.dart';
 
 // Your new custom widget is now imported
 import '../widgets/custom_input_field.dart';
+import '../ui/syn_kit.dart';
 
 class NewLifeScreen extends ConsumerStatefulWidget {
   const NewLifeScreen({super.key});
@@ -253,7 +254,9 @@ class _NewLifeScreenState extends ConsumerState<NewLifeScreen> {
             label.toUpperCase(),
             style: TextStyle(
               color: theme.colorScheme.secondary.withOpacity(0.8),
-              fontFamily: 'Orbitron', fontSize: 14, letterSpacing: 1.5, fontWeight: FontWeight.bold,
+              fontSize: 14,
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 10),
@@ -264,14 +267,27 @@ class _NewLifeScreenState extends ConsumerState<NewLifeScreen> {
               items: items.map(itemBuilder).toList(),
               validator: validator,
               dropdownColor: theme.colorScheme.surface,
-              style: const TextStyle(color: Colors.white, fontSize: 18),
+              style: const TextStyle(color: Colors.white, fontSize: 16),
               decoration: InputDecoration(
                 filled: true,
-                fillColor: Colors.black.withOpacity(0.3),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: theme.colorScheme.primary.withOpacity(0.6), width: 1)),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: theme.colorScheme.secondary, width: 2)),
-                errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: theme.colorScheme.error, width: 1.5)),
-                focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: theme.colorScheme.error, width: 2.5)),
+                fillColor: Colors.black,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(.12), width: 1),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: theme.colorScheme.primary.withOpacity(.6), width: 1),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: theme.colorScheme.error, width: 1),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: theme.colorScheme.error, width: 1),
+                ),
               ),
             ),
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -296,21 +312,21 @@ class _NewLifeScreenState extends ConsumerState<NewLifeScreen> {
               onPressed: () => _pageController.previousPage(duration: const Duration(milliseconds: 400), curve: Curves.easeInOut),
               child: Text("<< BACK", style: TextStyle(color: theme.colorScheme.secondary)),
             ),
-          const Spacer(),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              textStyle: const TextStyle(fontSize: 16, fontFamily: 'Orbitron', fontWeight: FontWeight.bold),
+          const SizedBox(width: 12),
+          Expanded(
+            child: DivButton(
+              label: isLastPage ? 'Initiate Consciousness' : 'Next',
+              icon: isLastPage ? Icons.check_circle_outline : Icons.chevron_right,
+              onPressed: () {
+                if (isLastPage) {
+                  _submitNewLife();
+                } else {
+                  _pageController.nextPage(duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+                }
+              },
+              fullWidth: true,
+              showChevron: !isLastPage,
             ),
-            onPressed: () {
-              // Only validate the form on the final submission
-              if (isLastPage) {
-                _submitNewLife();
-              } else {
-                _pageController.nextPage(duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
-              }
-            },
-            child: Text(isLastPage ? "Initiate Consciousness" : "NEXT >>"),
           ),
         ],
       ),

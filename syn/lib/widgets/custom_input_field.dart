@@ -35,68 +35,42 @@ class CustomInputField extends StatelessWidget {
             label.toUpperCase(),
             style: TextStyle(
               color: theme.colorScheme.secondary.withOpacity(0.8),
-              fontFamily: 'Orbitron',
               fontSize: 14,
               letterSpacing: 1.5,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 10),
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.4),
-                  blurRadius: 8.0,
-                  spreadRadius: -2.0,
-                ),
-              ],
+          TextFormField(
+            controller: controller,
+            initialValue: controller == null ? initialValue : null,
+            onSaved: (value) => onSaved(value ?? ''),
+            validator: validator,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
             ),
-            child: TextFormField(
-              controller: controller,
-              initialValue: controller == null ? initialValue : null,
-              onSaved: (value) => onSaved(value ?? ''),
-              validator: validator,
-              style: TextStyle(
-                color: theme.colorScheme.onSurface,
-                fontSize: 18,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(color: Colors.white38),
+              filled: true,
+              fillColor: Colors.black,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: Colors.white.withOpacity(.12), width: 1),
               ),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle: TextStyle(
-                  color: theme.colorScheme.onSurface.withOpacity(0.4),
-                ),
-                filled: true,
-                fillColor: theme.colorScheme.surface.withOpacity(0.3),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: theme.colorScheme.primary.withOpacity(0.6),
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: theme.colorScheme.secondary,
-                    width: 2,
-                  ),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: theme.colorScheme.error,
-                    width: 1.5,
-                  ),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: theme.colorScheme.error,
-                    width: 2.5,
-                  ),
-                ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: theme.colorScheme.primary.withOpacity(.6), width: 1),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: theme.colorScheme.error, width: 1),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: theme.colorScheme.error, width: 1),
               ),
             ),
           ),

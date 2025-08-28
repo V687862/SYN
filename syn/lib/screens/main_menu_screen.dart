@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_screen_provider.dart';
 import '../models/app_screen.dart';
 import '../providers/player_state_provider.dart';
-import '../widgets/synth_menu_button.dart'; // Import the new widget
 import '../ui/syn_kit.dart';
 
 class MainMenuScreen extends ConsumerWidget {
@@ -74,7 +73,7 @@ class MainMenuScreen extends ConsumerWidget {
                   const SizedBox(height: 60),
 
                   // Menu Buttons
-                  SynthMenuButton(
+                  DivButton(
                     label: 'New Life',
                     icon: Icons.add_circle_outline,
                     onPressed: () {
@@ -86,7 +85,7 @@ class MainMenuScreen extends ConsumerWidget {
                     },
                   ),
                   const SizedBox(height: 20),
-                  SynthMenuButton(
+                  DivButton(
                     label: 'Load Life',
                     icon: Icons.folder_open_outlined,
                     onPressed: () async {
@@ -112,7 +111,7 @@ class MainMenuScreen extends ConsumerWidget {
                     },
                   ),
                   const SizedBox(height: 20),
-                  SynthMenuButton(
+                  DivButton(
                     label: 'Settings',
                     icon: Icons.settings_outlined,
                     onPressed: () {
@@ -123,9 +122,10 @@ class MainMenuScreen extends ConsumerWidget {
                     },
                   ),
                   const SizedBox(height: 20),
-                  SynthMenuButton(
+                  DivButton(
                     label: 'Quit',
                     icon: Icons.exit_to_app_rounded,
+                    variant: DivButtonVariant.danger,
                     onPressed: () {
                       // Close the application
                       SystemNavigator.pop();
