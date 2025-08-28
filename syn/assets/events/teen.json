@@ -1,0 +1,42 @@
+[
+  {
+    "id": "teen_dance_invite",
+    "tags": ["teen", "social", "school"],
+    "summary": "A classmate invites you to the school dance.",
+    "description": "They seem nervous but hopeful. The dance is this Friday night.",
+    "choices": [
+      {"id":"accept","text":"Accept the invite.","effects":{"charisma":2, "confidence":3}},
+      {"id":"decline","text":"Decline politely.","effects":{"charisma":-1, "confidence":-1}},
+      {"id":"counter_invite","text":"Suggest going as a group instead.","effects":{"social":2, "charisma":1}}
+    ],
+    "gate": {"minAge": 13, "maxAge": 18},
+    "weight": 4
+  },
+  {
+    "id": "teen_first_job_offer",
+    "tags": ["teen", "work", "responsibility"],
+    "summary": "A local cafe offers you a part-time job.",
+    "description": "They need help after school. It could be your first step toward independence.",
+    "choices": [
+      {"id":"take_job","text":"Take the job.","effects":{"wealth":3, "confidence":2, "mood":1}},
+      {"id":"focus_school","text":"Focus on school instead.","effects":{"intelligence":2, "mood":1}},
+      {"id":"negotiate_hours","text":"Negotiate better hours.","effects":{"charisma":2, "confidence":2}}
+    ],
+    "gate": {"minAge": 15, "maxAge": 18},
+    "weight": 3
+  },
+  {
+    "id": "teen_secret_sketch",
+    "tags": ["teen", "creative", "risk"],
+    "summary": "Your suggestive sketch nearly gets exposed in class.",
+    "description": "The teacher walks by as your notebook is open. Your heart jumps.",
+    "nsfw": true,
+    "choices": [
+      {"id":"hide_quickly","text":"Close the notebook quickly.","effects":{"libido":1, "creativity":1}},
+      {"id":"own_it","text":"Own it. It's art.","effects":{"creativity":2, "charisma":1, "libido":1}},
+      {"id":"sink_chair","text":"Freeze and hope they don't notice.","effects":{"confidence":-3, "mood":-1}}
+    ],
+    "gate": {"minAge": 13, "maxAge": 18, "requiresNsfw": true},
+    "weight": 2
+  }
+]

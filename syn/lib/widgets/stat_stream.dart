@@ -127,6 +127,7 @@ class StatStreamWidget extends ConsumerWidget {
 
     final coreStats = _getCurrentCoreStats(profile, appSettings, context);
     final cs = Theme.of(context).colorScheme;
+    final reducedMotion = appSettings.accessibility.reducedMotion;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
@@ -148,6 +149,7 @@ class StatStreamWidget extends ConsumerWidget {
               maxValue: stat.maxValue,
               color: stat.color,
               icon: stat.icon,
+              reducedMotion: reducedMotion,
             ),
           );
         }).toList(),
@@ -164,6 +166,7 @@ class _StatBar extends StatelessWidget {
   final int maxValue;
   final Color color;
   final IconData? icon;
+  final bool reducedMotion;
 
   const _StatBar({
     super.key,
@@ -173,6 +176,7 @@ class _StatBar extends StatelessWidget {
     required this.maxValue,
     required this.color,
     this.icon,
+    this.reducedMotion = false,
   });
 
   @override
@@ -213,11 +217,13 @@ class _StatBar extends StatelessWidget {
                       borderRadius: BorderRadius.circular(5),
                     ),
                   ),
-                  // Smoothly animate the filled portion
+                  // Smoothly animate the filled portion (reduced-motion aware)
                   TweenAnimationBuilder<double>(
                     tween: Tween(begin: 0.0, end: targetFraction),
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.easeOutCubic,
+                    duration: reducedMotion
+                        ? const Duration(milliseconds: 1)
+                        : const Duration(milliseconds: 350),
+                    curve: reducedMotion ? Curves.linear : Curves.easeOutCubic,
                     builder: (context, frac, child) {
                       return FractionallySizedBox(
                         heightFactor: frac,
@@ -229,8 +235,8 @@ class _StatBar extends StatelessWidget {
                             boxShadow: [
                               BoxShadow(
                                 color: color,
-                                blurRadius: 12.0,
-                                spreadRadius: 1.0,
+                                blurRadius: reducedMotion ? 6.0 : 12.0,
+                                spreadRadius: reducedMotion ? 0.5 : 1.0,
                               ),
                             ],
                           ),

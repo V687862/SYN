@@ -72,6 +72,13 @@ flutter:
     - assets/static/genders.json # Make sure to add this if it's also used
     - assets/data/memories.json  # And this for your memories
     - assets/static/core_drives.json # Core drives data for Octalysis framework
+    - assets/events/manifest.json
+    - assets/events/child.json
+    - assets/events/teen.json
+    - assets/events/young_adult.json
+    - assets/events/adult.json
+    - assets/events/elder.json
+    - assets/events/digital.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -10,6 +10,7 @@ import '../models/player_profile.dart';
 import '../services/slm_events.dart';
 import '../widgets/stat_stream.dart';
 import '../widgets/advance_year.dart';
+import '../services/event_pool_service.dart';
 
 // ✨ Diviniko kit
 import '../ui/syn_kit.dart';
@@ -101,10 +102,39 @@ class DashboardScreen extends ConsumerWidget {
             // Event prompt / awaiting
             Expanded(child: _EventPrompt(panelPlayer: player)),
 
-            // Stats in a ghost panel for cohesion
-            const GhostPanel(
-              margin: EdgeInsets.only(top: 8, bottom: 12),
-              child: StatStreamWidget(),
+            // Stats in a ghost panel for cohesion, with active modifiers below
+            GhostPanel(
+              margin: const EdgeInsets.only(top: 8, bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const StatStreamWidget(),
+                  Builder(builder: (context) {
+                    final mods = player.activeModifiers;
+                    if (mods.isEmpty) return const SizedBox.shrink();
+                    // Map modifiers to chips
+                    final chips = mods.map((m) {
+                      final total = m.statEffects.values.fold<num>(0, (a, b) => a + b);
+                      final kind = total > 0
+                          ? ModifierKind.buff
+                          : (total < 0 ? ModifierKind.debuff : ModifierKind.neutral);
+                      final icon = kind == ModifierKind.buff
+                          ? Icons.auto_awesome
+                          : (kind == ModifierKind.debuff
+                              ? Icons.warning_amber_rounded
+                              : Icons.tune);
+                      final label = m.duration > 0
+                          ? '${m.description} (${m.duration})'
+                          : m.description;
+                      return ModifierChip(label: label, kind: kind, icon: icon);
+                    }).toList();
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: ModifiersStrip(modifiers: chips),
+                    );
+                  }),
+                ],
+              ),
             ),
 
             // Link-style secondary action
@@ -144,16 +174,35 @@ class DashboardScreen extends ConsumerWidget {
                 );
 
                 try {
-                  final slm = ref.read(slmServiceProvider);
                   final profile = ref.read(playerStateProvider);
-                  final newEvent = await slm.generateRandomEvent(profile);
+                  final settings = ref.read(appSettingsProvider);
 
-                  if (context.mounted) Navigator.pop(context);
-                  if (context.mounted) {
-                    ref.read(playerStateProvider.notifier)
-                        .setCurrentMemoryEvent(newEvent);
-                    ref.read(appScreenProvider.notifier)
-                        .push(AppScreen.memoryEventView);
+                  // Prefer curated pool; fall back to AI if none
+                  final poolSvc = ref.read(eventPoolServiceProvider);
+                  final tpl = await poolSvc.pickWeighted(profile, settings);
+                  if (tpl != null) {
+                    final newEvent = tpl.materialize(profile);
+                    if (context.mounted) Navigator.pop(context);
+                    if (context.mounted) {
+                      ref
+                          .read(playerStateProvider.notifier)
+                          .setCurrentMemoryEvent(newEvent);
+                      ref
+                          .read(appScreenProvider.notifier)
+                          .push(AppScreen.memoryEventView);
+                    }
+                  } else {
+                    final slm = ref.read(slmServiceProvider);
+                    final newEvent = await slm.generateRandomEvent(profile);
+                    if (context.mounted) Navigator.pop(context);
+                    if (context.mounted) {
+                      ref
+                          .read(playerStateProvider.notifier)
+                          .setCurrentMemoryEvent(newEvent);
+                      ref
+                          .read(appScreenProvider.notifier)
+                          .push(AppScreen.memoryEventView);
+                    }
                   }
                 } catch (e) {
                   if (context.mounted) Navigator.pop(context);

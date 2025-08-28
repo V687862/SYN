@@ -1,0 +1,15 @@
+[
+  {
+    "id": "child_library_discovery",
+    "tags": ["childhood", "curiosity", "education"],
+    "summary": "You discover a strange book in the children’s library.",
+    "description": "A book with embossed symbols catches your eye. The librarian notices your interest and smiles knowingly.",
+    "ageRange": [6, 12],
+    "choices": [
+      {"id":"read_it","text":"Read it quietly in a corner.","effects":{"intelligence":2, "creativity":2},"outcomeDescription":"New myths spark your imagination."},
+      {"id":"ask_librarian","text":"Ask the librarian about it.","effects":{"charisma":1, "confidence":2},"outcomeDescription":"They show you a hidden section of age-appropriate tales."}
+    ],
+    "gate": {"minAge": 5, "maxAge": 12},
+    "weight": 3
+  }
+]

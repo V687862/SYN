@@ -1,0 +1,15 @@
+[
+  {
+    "id": "digital_memory_edit",
+    "tags": ["digital", "identity", "philosophy"],
+    "summary": "You receive an offer to edit a painful memory.",
+    "description": "A memory clinic promises serenity at the cost of authenticity.",
+    "choices": [
+      {"id":"edit_out","text":"Edit the memory out.","effects":{"happiness":4, "wisdom":-2}},
+      {"id":"preserve","text":"Preserve it—pain is part of you.","effects":{"wisdom":3, "mood":-1}},
+      {"id":"partial_blur","text":"Blur its sharpest edges.","effects":{"happiness":2, "wisdom":1}}
+    ],
+    "gate": {"minAge": 18, "requiredFlags": ["digital_transcended"]},
+    "weight": 4
+  }
+]

@@ -1,0 +1,28 @@
+[
+  {
+    "id": "adult_promotion_review",
+    "tags": ["adult", "career", "milestone"],
+    "summary": "Your manager schedules a surprise performance review.",
+    "description": "Rumors of a promotion are in the air. Your record is strong but not flawless.",
+    "choices": [
+      {"id":"highlight_wins","text":"Confidently highlight your wins.","effects":{"charisma":2, "confidence":3, "wealth":3}},
+      {"id":"understate","text":"Understate and focus on team.","effects":{"reputation":2, "charisma":-1}},
+      {"id":"push_raise","text":"Push hard for a raise.","effects":{"confidence":3, "wealth":4, "reputation":-1}}
+    ],
+    "gate": {"minAge": 25, "maxAge": 64, "minStats": {"reputation": 20}},
+    "weight": 4
+  },
+  {
+    "id": "adult_burnout_choice",
+    "tags": ["adult", "health", "stress"],
+    "summary": "You feel signs of burnout after months of overwork.",
+    "description": "Headaches, irritability, and sleeplessness creep in. Something needs to change.",
+    "choices": [
+      {"id":"take_vacation","text":"Take a short vacation.","effects":{"health":3, "happiness":3, "wealth":-2}},
+      {"id":"therapy","text":"Start therapy sessions.","effects":{"wisdom":2, "happiness":2, "wealth":-1}},
+      {"id":"push_through","text":"Push through it.","effects":{"wealth":2, "health":-3, "mood":-2}}
+    ],
+    "gate": {"minAge": 24, "maxAge": 64},
+    "weight": 3
+  }
+]

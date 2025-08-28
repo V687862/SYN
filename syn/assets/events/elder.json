@@ -1,0 +1,24 @@
+[
+  {
+    "id": "elder_grandchild_visit",
+    "tags": ["elder", "family", "happiness"],
+    "summary": "Your grandchild visits and asks about your childhood.",
+    "description": "They listen with wide eyes as you recount a tale from decades ago.",
+    "effects": {"happiness": 4, "wisdom": 2},
+    "gate": {"minAge": 65},
+    "weight": 4
+  },
+  {
+    "id": "elder_health_screening",
+    "tags": ["elder", "health"],
+    "summary": "A routine screening suggests you need more exercise.",
+    "description": "Your doctor recommends light activity and a more regular sleep schedule.",
+    "choices": [
+      {"id":"daily_walks","text":"Start daily walks.","effects":{"health":3, "mood":2}},
+      {"id":"join_class","text":"Join a gentle exercise class.","effects":{"health":3, "social":2}},
+      {"id":"ignore_advice","text":"Ignore it for now.","effects":{"health":-2}}
+    ],
+    "gate": {"minAge": 65},
+    "weight": 3
+  }
+]

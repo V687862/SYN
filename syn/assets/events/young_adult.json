@@ -1,0 +1,28 @@
+[
+  {
+    "id": "ya_first_apartment",
+    "tags": ["young_adult", "independence", "finance"],
+    "summary": "You find a small studio apartment within budget.",
+    "description": "It's not much, but it's yours. The landlord wants a decision by tomorrow.",
+    "choices": [
+      {"id":"sign_lease","text":"Sign the lease.","effects":{"wealth":-5, "confidence":4, "happiness":3}},
+      {"id":"keep_searching","text":"Keep searching for now.","effects":{"confidence":-1, "mood":-1}},
+      {"id":"roommate","text":"Ask a friend to split rent.","effects":{"wealth":-3, "social":2, "confidence":2}}
+    ],
+    "gate": {"minAge": 18, "maxAge": 30, "minStats": {"wealth": 20}},
+    "weight": 4
+  },
+  {
+    "id": "ya_hobby_showcase",
+    "tags": ["young_adult", "creative", "community"],
+    "summary": "Your hobby collective invites you to a local showcase.",
+    "description": "A small gallery offers wall space for your work this weekend.",
+    "choices": [
+      {"id":"prepare_pieces","text":"Prepare three strong pieces.","effects":{"creativity":3, "confidence":2}},
+      {"id":"decline_busy","text":"Decline, you’re too busy.","effects":{"mood":-1, "confidence":-1}},
+      {"id":"collab_friend","text":"Collaborate with a friend.","effects":{"social":2, "creativity":2}}
+    ],
+    "gate": {"minAge": 18, "maxAge": 35},
+    "weight": 3
+  }
+]
