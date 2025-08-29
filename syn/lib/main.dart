@@ -13,6 +13,7 @@ import 'screens/initial_intro_screen.dart';
 import 'screens/main_menu_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/placeholder_screen.dart';
+import 'screens/relationships_screen.dart';
 import 'screens/actions_screen.dart';
 import 'screens/in_game_menu_screen.dart';
 import 'screens/journal_screen.dart';
@@ -99,7 +100,7 @@ class AppNavigator extends ConsumerWidget {
       case AppScreen.actions:
         page = const ActionsScreen(); break;
       case AppScreen.relationshipView:
-        page = const PlaceholderScreen(screenName: 'Relationships'); break;
+        page = const RelationshipsScreen(); break;
       case AppScreen.memoryLogView:
         page = const JournalScreen(); break;
       case AppScreen.world:

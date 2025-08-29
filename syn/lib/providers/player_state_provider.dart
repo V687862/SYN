@@ -21,6 +21,8 @@ import '../widgets/life_stage_transition_modal.dart';
 import '../widgets/stat_stream.dart';
 import '../models/dynamic_modifiers.dart'; // Import the modifier model
 import '../models/education_focus.dart';
+import '../services/relationship_service.dart';
+import '../services/social_engine_service.dart';
 
 // --- Riverpod Providers for Services ---
 final memoryEngineServiceProvider = Provider<MemoryEngineService>((ref) {
@@ -185,6 +187,13 @@ class PlayerStateNotifier extends StateNotifier<PlayerProfile> {
       final newStats = _applyStatEffects(updatedProfile.stats, selectedChoice.effects!);
       updatedProfile = updatedProfile.copyWith(stats: newStats);
     }
+    // Apply relationship effects if present
+    if (selectedChoice.relationshipEffects != null &&
+        selectedChoice.relationshipEffects!.isNotEmpty) {
+      final relSvc = RelationshipService();
+      updatedProfile = relSvc.applyRelationshipEffects(
+          updatedProfile, selectedChoice.relationshipEffects!);
+    }
     
     final logEntry = ActionLogEntry(
       id: uuid.v4(),
@@ -229,6 +238,11 @@ class PlayerStateNotifier extends StateNotifier<PlayerProfile> {
     }
 
     PlayerProfile profileForAging = state.copyWith(activeModifiers: nextYearModifiers);
+
+    // Yearly relationship decay + compatibility updates
+    final relSvc = RelationshipService();
+    profileForAging = relSvc.tickYearDecay(profileForAging);
+    profileForAging = relSvc.recomputeCompatibility(profileForAging);
     
     final ageService = _ref.read(ageServiceProvider);
     final educationService = _ref.read(educationServiceProvider);
@@ -303,6 +317,13 @@ class PlayerStateNotifier extends StateNotifier<PlayerProfile> {
 
     // Determine event for the year, preferring age-driven event, then education-triggered event
     MemoryEvent? finalEventForYear = ageUpResult.newEvent ?? eduResult.triggeredEvent ?? newProfile.currentMemoryEvent;
+
+    // If still none, allow an NPC-initiated social event via the social engine
+    if (finalEventForYear == null) {
+      final social = _ref.read(socialEngineServiceProvider);
+      final npcEvent = await social.maybeNpcInitiatedEvent(newProfile, appSettings);
+      finalEventForYear = npcEvent ?? finalEventForYear;
+    }
     newProfile = newProfile.copyWith(currentMemoryEvent: finalEventForYear);
 
     if (newProfile.currentMemoryEvent != null) {

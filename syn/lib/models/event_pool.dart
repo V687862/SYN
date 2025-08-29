@@ -1,5 +1,6 @@
 import 'package:syn/models/memory_event.dart';
 import 'package:syn/models/player_profile.dart';
+import 'package:syn/models/npc.dart';
 
 class EventGate {
   final int? minAge;
@@ -9,6 +10,7 @@ class EventGate {
   final List<String> excludedFlags;
   final Map<String, num>? minStats; // e.g., { "charisma": 40 }
   final Map<String, num>? maxStats;
+  final List<RelationshipCondition> relationshipConditions;
 
   const EventGate({
     this.minAge,
@@ -18,6 +20,7 @@ class EventGate {
     this.excludedFlags = const [],
     this.minStats,
     this.maxStats,
+    this.relationshipConditions = const [],
   });
 
   factory EventGate.fromJson(Map<String, dynamic>? json) {
@@ -40,6 +43,10 @@ class EventGate {
       maxStats: json['maxStats'] != null
           ? Map<String, num>.from(json['maxStats'] as Map)
           : null,
+      relationshipConditions: (json['relationshipConditions'] as List<dynamic>?)
+              ?.map((e) => RelationshipCondition.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
   }
 
@@ -51,7 +58,59 @@ class EventGate {
         if (excludedFlags.isNotEmpty) 'excludedFlags': excludedFlags,
         if (minStats != null) 'minStats': minStats,
         if (maxStats != null) 'maxStats': maxStats,
+        if (relationshipConditions.isNotEmpty)
+          'relationshipConditions': relationshipConditions.map((e) => e.toJson()).toList(),
       };
+}
+
+class RelationshipCondition {
+  final NPCRole role; // required role
+  final double? minAffection;
+  final double? minTrust;
+  final double? minSexCompatibility;
+  final RelationshipStage? stage; // required stage (exact)
+
+  const RelationshipCondition({
+    required this.role,
+    this.minAffection,
+    this.minTrust,
+    this.minSexCompatibility,
+    this.stage,
+  });
+
+  factory RelationshipCondition.fromJson(Map<String, dynamic> json) {
+    final roleName = json['role'] as String? ?? 'friend';
+    final role = NPCRole.values.firstWhere(
+      (r) => r.name.toLowerCase() == roleName.toLowerCase(),
+      orElse: () => NPCRole.friend,
+    );
+    return RelationshipCondition(
+      role: role,
+      minAffection: (json['minAffection'] as num?)?.toDouble(),
+      minTrust: (json['minTrust'] as num?)?.toDouble(),
+      minSexCompatibility: (json['minSexCompatibility'] as num?)?.toDouble(),
+      stage: _stageFrom(json['stage'] as String?),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'role': role.name,
+        if (minAffection != null) 'minAffection': minAffection,
+        if (minTrust != null) 'minTrust': minTrust,
+        if (minSexCompatibility != null)
+          'minSexCompatibility': minSexCompatibility,
+        if (stage != null) 'stage': stage!.name,
+      };
+}
+
+RelationshipStage? _stageFrom(String? s) {
+  if (s == null) return null;
+  try {
+    return RelationshipStage.values
+        .firstWhere((e) => e.name.toLowerCase() == s.toLowerCase());
+  } catch (_) {
+    return null;
+  }
 }
 
 class PooledEventTemplate {
@@ -101,17 +160,50 @@ class PooledEventTemplate {
     );
   }
 
-  MemoryEvent materialize(PlayerProfile profile) {
+  MemoryEvent materialize(PlayerProfile profile, {Map<String, String>? variables}) {
+    String sum = summary;
+    String desc = description;
+    List<EventChoice>? ch = choices;
+    if (variables != null) {
+      variables.forEach((k, v) {
+        sum = sum.replaceAll('{$k}', v);
+        desc = desc.replaceAll('{$k}', v);
+      });
+      if (choices != null) {
+        ch = choices!.map((c) {
+          String t = c.text;
+          String? od = c.outcomeDescription;
+          variables.forEach((k, v) {
+            t = t.replaceAll('{$k}', v);
+            if (od != null) od = od!.replaceAll('{$k}', v);
+          });
+          List<Map<String, dynamic>>? rel = c.relationshipEffects?.map((m) {
+            final mm = Map<String, dynamic>.from(m);
+            mm.updateAll((key, value) {
+              if (value is String) {
+                var s = value;
+                variables.forEach((k, v) {
+                  s = s.replaceAll('{$k}', v);
+                });
+                return s;
+              }
+              return value;
+            });
+            return mm;
+          }).toList();
+          return c.copyWith(text: t, outcomeDescription: od, relationshipEffects: rel);
+        }).toList();
+      }
+    }
     return MemoryEvent(
       id: id,
       age: profile.age,
-      summary: summary,
-      description: description,
+      summary: sum,
+      description: desc,
       tags: tags,
       effects: effects,
       nsfw: nsfw,
-      choices: choices,
+      choices: ch,
     );
   }
 }
-

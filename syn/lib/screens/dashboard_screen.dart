@@ -11,6 +11,8 @@ import '../services/slm_events.dart';
 import '../widgets/stat_stream.dart';
 import '../widgets/advance_year.dart';
 import '../services/event_pool_service.dart';
+import '../services/social_engine_service.dart';
+import '../models/memory_event.dart';
 
 // ✨ Diviniko kit
 import '../ui/syn_kit.dart';
@@ -181,7 +183,14 @@ class DashboardScreen extends ConsumerWidget {
                   final poolSvc = ref.read(eventPoolServiceProvider);
                   final tpl = await poolSvc.pickWeighted(profile, settings);
                   if (tpl != null) {
-                    final newEvent = tpl.materialize(profile);
+                    MemoryEvent newEvent;
+                    if (tpl.gate.relationshipConditions.isNotEmpty) {
+                      final social = ref.read(socialEngineServiceProvider);
+                      final maybe = await social.maybeNpcInitiatedEvent(profile, settings);
+                      newEvent = maybe ?? tpl.materialize(profile);
+                    } else {
+                      newEvent = tpl.materialize(profile);
+                    }
                     if (context.mounted) Navigator.pop(context);
                     if (context.mounted) {
                       ref

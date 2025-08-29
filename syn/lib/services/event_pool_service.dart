@@ -131,8 +131,33 @@ class EventPoolService {
         final maxA = tpl.ageRange![1];
         if (profile.age < minA || profile.age > maxA) return false;
       }
+      // Relationship gating
+      if (g.relationshipConditions.isNotEmpty &&
+          !_relationshipOk(profile, g)) return false;
       return true;
     }).toList();
+  }
+
+  bool _relationshipOk(PlayerProfile p, EventGate g) {
+    for (final cond in g.relationshipConditions) {
+      final found = p.relationships.any((n) {
+        if (n.role != cond.role) return false;
+        if (cond.stage != null && n.stage != cond.stage) return false;
+        if (cond.minAffection != null && n.affection < cond.minAffection!) {
+          return false;
+        }
+        if (cond.minTrust != null && n.trust < cond.minTrust!) {
+          return false;
+        }
+        if (cond.minSexCompatibility != null &&
+            n.sexCompatibility < cond.minSexCompatibility!) {
+          return false;
+        }
+        return true;
+      });
+      if (!found) return false;
+    }
+    return true;
   }
 
   Future<PooledEventTemplate?> pickWeighted(

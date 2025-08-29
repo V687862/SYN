@@ -1,0 +1,112 @@
+[
+  {
+    "id": "friend_needs_help_moving",
+    "tags": ["relationship", "friend", "social", "favor"],
+    "summary": "{NPC_NAME} asks if you can help them move this weekend.",
+    "description": "It's a big ask, and they're a close {NPC_ROLE}. They promise pizza and thanks.",
+    "choices": [
+      {"id":"help_them","text":"Help them move.","effects":{"karma":2, "social":2, "strength":1}},
+      {"id":"offer_alt","text":"Offer to help with packing only.","effects":{"karma":1, "social":1}},
+      {"id":"decline","text":"Decline, you're swamped.","effects":{"karma":-1, "mood":-1}}
+    ],
+    "gate": {
+      "relationshipConditions": [
+        {"role": "friend", "minAffection": 10}
+      ]
+    },
+    "weight": 3
+  },
+  {
+    "id": "lover_jealousy_rumor",
+    "tags": ["relationship", "lover", "conflict"],
+    "summary": "{NPC_NAME} heard a rumor and seems distant.",
+    "description": "They bring it up over dinner. The air is tense—do they trust you?",
+    "choices": [
+      {"id":"reassure","text":"Reassure them and explain.","effects":{"charisma":1, "confidence":1}},
+      {"id":"push_back","text":"Push back on being accused.","effects":{"confidence":2, "mood":-1}},
+      {"id":"change_subject","text":"Change the subject and defuse.","effects":{"charisma":1, "wisdom":1}}
+    ],
+    "gate": {
+      "relationshipConditions": [
+        {"role": "lover", "minTrust": 10}
+      ]
+    },
+    "weight": 2
+  },
+  {
+    "id": "first_date_invite",
+    "tags": ["relationship", "dating", "romantic"],
+    "summary": "{NPC_NAME} asks you out for coffee this weekend.",
+    "description": "They've been dropping hints. This feels like a first date.",
+    "choices": [
+      {"id":"accept_date","text":"Accept and pick a cozy cafe.","effects":{"charisma":1, "confidence":2},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","newRole":"lover","newStage":"dating","affectionChange":10,"trustChange":5}]},
+      {"id":"suggest_group","text":"Suggest a group hang instead.","effects":{"social":1},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","affectionChange":2}]},
+      {"id":"decline","text":"Decline politely.","effects":{"mood":-1},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","affectionChange":-5}]}
+    ],
+    "gate": {
+      "relationshipConditions": [
+        {"role": "friend", "minAffection": 15}
+      ]
+    },
+    "weight": 3
+  },
+  {
+    "id": "define_the_relationship",
+    "tags": ["relationship", "romantic", "milestone"],
+    "summary": "{NPC_NAME} asks where this is going.",
+    "description": "You've been seeing each other. It's time to define the relationship.",
+    "choices": [
+      {"id":"commit","text":"Commit to being exclusive.","effects":{"confidence":2,"happiness":2},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","newRole":"lover","newStage":"committed","trustChange":10,"affectionChange":8}]},
+      {"id":"keep_casual","text":"Keep it casual for now.","effects":{"mood":-1},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","affectionChange":-2}]}
+    ],
+    "gate": {
+      "relationshipConditions": [
+        {"role": "lover", "stage":"dating", "minTrust": 10}
+      ]
+    },
+    "weight": 3
+  },
+  {
+    "id": "move_in_together",
+    "tags": ["relationship", "cohabiting", "milestone"],
+    "summary": "{NPC_NAME} suggests moving in together.",
+    "description": "It would save money—and bring you closer.",
+    "choices": [
+      {"id":"move_in","text":"Yes. Find a place together.","effects":{"wealth":-3,"happiness":3},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","newStage":"cohabiting","trustChange":8}]},
+      {"id":"not_ready","text":"Not ready yet.","effects":{"mood":-1},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","trustChange":-3}]}
+    ],
+    "gate": {
+      "relationshipConditions": [
+        {"role": "lover", "stage":"committed", "minTrust": 20}
+      ]
+    },
+    "weight": 2
+  },
+  {
+    "id": "jealousy_breach_and_reconciliation",
+    "tags": ["relationship", "conflict", "reconciliation"],
+    "summary": "A rumor strains your relationship with {NPC_NAME}.",
+    "description": "They confront you. You can work to rebuild trust—or let it crack.",
+    "choices": [
+      {"id":"rebuild","text":"Have an honest talk and rebuild.","effects":{"wisdom":1},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","trustChange":8,"affectionChange":4}]},
+      {"id":"deny","text":"Deny and deflect.","effects":{"confidence":1},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","trustChange":-6}]},
+      {"id":"break_up","text":"End it.","effects":{"mood":-3},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","newStage":"brokenUp","affectionChange":-20,"trustChange":-20}]}
+    ],
+    "gate": {
+      "relationshipConditions": [
+        {"role": "lover", "minTrust": 10}
+      ]
+    },
+    "weight": 2
+  }
+]

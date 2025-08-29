@@ -4,5 +4,6 @@
   "young_adult.json",
   "adult.json",
   "elder.json",
-  "digital.json"
+  "digital.json",
+  "relationship.json"
 ]
