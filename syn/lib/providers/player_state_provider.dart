@@ -11,6 +11,9 @@ import '../models/player_stats.dart';
 import '../models/settings.dart';
 import '../services/age_service.dart';
 import '../services/memory_engine_service.dart';
+import '../services/event_pool_service.dart';
+import '../services/social_engine_service.dart';
+import '../services/slm_events.dart';
 import '../services/education_service.dart';
 import '../models/education_stage.dart';
 import '../models/action_log_entry.dart';
@@ -34,8 +37,38 @@ final ageServiceProvider = Provider<AgeService>((ref) {
   return AgeService(memoryEngine);
 });
 
-final appSettingsProvider = StateProvider<AppSettings>((ref) {
-  return const AppSettings();
+class SettingsNotifier extends StateNotifier<AppSettings> {
+  SettingsNotifier() : super(const AppSettings()) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final s = prefs.getString('appSettingsSave');
+      if (s != null) {
+        final jsonMap = jsonDecode(s) as Map<String, dynamic>;
+        state = AppSettings.fromJson(jsonMap);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _save() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('appSettingsSave', jsonEncode(state.toJson()));
+    } catch (_) {}
+  }
+
+  void update(AppSettings Function(AppSettings) updater) {
+    state = updater(state);
+    _save();
+  }
+}
+
+final appSettingsProvider =
+    StateNotifierProvider<SettingsNotifier, AppSettings>((ref) {
+  return SettingsNotifier();
 });
 
 final educationServiceProvider = Provider<EducationService>((ref) {
@@ -195,6 +228,16 @@ class PlayerStateNotifier extends StateNotifier<PlayerProfile> {
           updatedProfile, selectedChoice.relationshipEffects!);
     }
     
+    // Derive affectedNpcId if this choice targets a specific NPC by id
+    String? affectedNpcId;
+    if (selectedChoice.relationshipEffects != null) {
+      try {
+        final eff = selectedChoice.relationshipEffects!
+            .firstWhere((e) => (e['targetType'] as String?)?.toLowerCase() == 'id');
+        affectedNpcId = eff['targetValue'] as String?;
+      } catch (_) {}
+    }
+
     final logEntry = ActionLogEntry(
       id: uuid.v4(),
       playerAge: updatedProfile.age,
@@ -203,11 +246,43 @@ class PlayerStateNotifier extends StateNotifier<PlayerProfile> {
       choiceId: selectedChoice.id,
       choiceText: selectedChoice.text,
       outcomeDescription: selectedChoice.outcomeDescription,
+      affectedNpcId: affectedNpcId,
     );
     _ref.read(actionLogProvider.notifier).addLog(logEntry);
     
-    final updatedMemories = List<MemoryEvent>.from(updatedProfile.memories)..add(originalEvent);
-    
+    // Handle triggered event chains from curated pools
+    if (selectedChoice.triggeredEventId != null &&
+        selectedChoice.triggeredEventId!.isNotEmpty) {
+      final pool = _ref.read(eventPoolServiceProvider);
+      final tpl = await pool.getById(selectedChoice.triggeredEventId!);
+      if (tpl != null) {
+        // Try to pass actor variables if target by id was provided
+        Map<String, String>? vars;
+        if (affectedNpcId != null) {
+          try {
+            final npc = updatedProfile.relationships
+                .firstWhere((n) => n.id == affectedNpcId);
+            vars = {
+              'ACTOR_ID': npc.id,
+              'NPC_NAME': npc.name,
+              'NPC_ROLE': npc.role.name.toUpperCase(),
+            };
+          } catch (_) {}
+        }
+        final nextEvent = tpl.materialize(updatedProfile, variables: vars);
+        updatedProfile = updatedProfile.copyWith(
+          currentMemoryEvent: nextEvent,
+          currentPhase: GamePhase.memory,
+        );
+        state = updatedProfile;
+        _ref.read(appScreenProvider.notifier).push(AppScreen.memoryEventView);
+        return;
+      }
+    }
+
+    final updatedMemories = List<MemoryEvent>.from(updatedProfile.memories)
+      ..add(originalEvent);
+
     updatedProfile = updatedProfile.copyWith(
       memories: updatedMemories,
       clearCurrentMemoryEvent: true,
@@ -315,14 +390,41 @@ class PlayerStateNotifier extends StateNotifier<PlayerProfile> {
       newProfile = newProfile.copyWith(stats: newStats);
     }
 
-    // Determine event for the year, preferring age-driven event, then education-triggered event
-    MemoryEvent? finalEventForYear = ageUpResult.newEvent ?? eduResult.triggeredEvent ?? newProfile.currentMemoryEvent;
+    // Determine event for the year
+    MemoryEvent? finalEventForYear =
+        ageUpResult.newEvent ?? eduResult.triggeredEvent ?? newProfile.currentMemoryEvent;
+
+    // If none from age/education, try curated pools with life-stage tag bias
+    if (finalEventForYear == null) {
+      final pool = _ref.read(eventPoolServiceProvider);
+      final lifeStage = getLifeStage(newAge);
+      final tags = _preferredTagsForStage(lifeStage);
+      final tpl = await pool.pickWeighted(newProfile, appSettings, preferredTags: tags);
+      if (tpl != null) {
+        if (tpl.gate.relationshipConditions.isNotEmpty) {
+          final social = _ref.read(socialEngineServiceProvider);
+          final npcEvent = await social.maybeNpcInitiatedEvent(newProfile, appSettings);
+          finalEventForYear = npcEvent ?? tpl.materialize(newProfile);
+        } else {
+          finalEventForYear = tpl.materialize(newProfile);
+        }
+      }
+    }
 
     // If still none, allow an NPC-initiated social event via the social engine
     if (finalEventForYear == null) {
       final social = _ref.read(socialEngineServiceProvider);
       final npcEvent = await social.maybeNpcInitiatedEvent(newProfile, appSettings);
       finalEventForYear = npcEvent ?? finalEventForYear;
+    }
+
+    // If still none, fall back to AI
+    if (finalEventForYear == null) {
+      try {
+        final slm = _ref.read(slmServiceProvider);
+        final aiEvent = await slm.generateRandomEvent(newProfile);
+        finalEventForYear = aiEvent;
+      } catch (_) {}
     }
     newProfile = newProfile.copyWith(currentMemoryEvent: finalEventForYear);
 
@@ -401,6 +503,25 @@ class PlayerStateNotifier extends StateNotifier<PlayerProfile> {
       print("--- Error Loading Player Profile: $e ---");
       state = PlayerProfile.initial();
     }
+  }
+}
+
+List<String> _preferredTagsForStage(LifeStage stage) {
+  switch (stage) {
+    case LifeStage.infant:
+      return const ['childhood', 'family', 'health'];
+    case LifeStage.child:
+      return const ['childhood', 'education', 'social'];
+    case LifeStage.teen:
+      return const ['teen', 'school', 'social', 'romantic'];
+    case LifeStage.youngAdult:
+      return const ['young_adult', 'independence', 'career', 'romantic'];
+    case LifeStage.adult:
+      return const ['adult', 'career', 'family', 'health'];
+    case LifeStage.elder:
+      return const ['elder', 'health', 'family', 'legacy'];
+    case LifeStage.digital:
+      return const ['digital', 'identity', 'philosophy'];
   }
 }
 

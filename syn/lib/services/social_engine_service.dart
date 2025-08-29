@@ -35,9 +35,18 @@ class SocialEngineService {
 
     for (final tpl in relTpls) {
       final conds = tpl.gate.relationshipConditions;
-      // choose first condition's role as the actor
-      final role = conds.first.role;
-      final candidates = profile.relationships.where((n) => n.role == role);
+      // choose first condition and match fully for actor
+      final c0 = conds.first;
+      final role = c0.role;
+      final candidates = profile.relationships.where((n) {
+        if (n.role != role) return false;
+        if (c0.stage != null && n.stage != c0.stage) return false;
+        if (c0.minAffection != null && n.affection < c0.minAffection!) return false;
+        if (c0.minTrust != null && n.trust < c0.minTrust!) return false;
+        if (c0.minSexCompatibility != null &&
+            n.sexCompatibility < c0.minSexCompatibility!) return false;
+        return true;
+      });
       if (candidates.isEmpty) continue;
       final npc = candidates.reduce((a, b) => (a.affection + a.trust) > (b.affection + b.trust) ? a : b);
       final score = npc.affection + npc.trust + (npc.sexCompatibility * 0.25);

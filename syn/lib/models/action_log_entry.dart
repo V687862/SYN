@@ -8,6 +8,7 @@
       final String choiceId; // ID of the EventChoice taken
       final String choiceText; // Text of the choice taken
       final String? outcomeDescription; // Outcome description from the EventChoice
+      final String? affectedNpcId; // optional: id of NPC primarily affected
       // You could add more details like stats changed, flags set/removed, etc.
 
       const ActionLogEntry({
@@ -18,6 +19,7 @@
         required this.choiceId,
         required this.choiceText,
         this.outcomeDescription,
+        this.affectedNpcId,
       });
 
       // For potential future use (e.g., saving/loading logs, though often logs are transient per session)
@@ -30,6 +32,7 @@
           choiceId: json['choiceId'] as String,
           choiceText: json['choiceText'] as String,
           outcomeDescription: json['outcomeDescription'] as String?,
+          affectedNpcId: json['affectedNpcId'] as String?,
         );
       }
 
@@ -41,6 +44,7 @@
             'choiceId': choiceId,
             'choiceText': choiceText,
             if (outcomeDescription != null) 'outcomeDescription': outcomeDescription,
+            if (affectedNpcId != null) 'affectedNpcId': affectedNpcId,
           };
     }
     

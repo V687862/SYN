@@ -19,6 +19,7 @@ class EventChoice {
   // 'targetType' can be 'role' (e.g., "lover", "friend_closest") or 'id' (specific NPC ID).
   // 'targetValue' is the role name or the NPC's unique ID.
   final List<Map<String, dynamic>>? relationshipEffects;
+  final Map<String, dynamic>? requires; // optional gating metadata
 
   const EventChoice({
     required this.id,
@@ -30,6 +31,7 @@ class EventChoice {
     this.triggeredEventId,
     this.relationshipEffects,
     this.driveAffinity,
+    this.requires,
   });
 
   EventChoice copyWith({
@@ -42,6 +44,7 @@ class EventChoice {
     String? triggeredEventId,
     List<Map<String, dynamic>>? relationshipEffects,
     Map<String, int>? driveAffinity,
+    Map<String, dynamic>? requires,
   }) {
     return EventChoice(
       id: id ?? this.id,
@@ -53,6 +56,7 @@ class EventChoice {
       triggeredEventId: triggeredEventId ?? this.triggeredEventId,
       relationshipEffects: relationshipEffects ?? this.relationshipEffects,
       driveAffinity: driveAffinity ?? this.driveAffinity,
+      requires: requires ?? this.requires,
     );
   }
 
@@ -77,6 +81,9 @@ class EventChoice {
       driveAffinity: json['driveAffinity'] != null
           ? Map<String, int>.from(json['driveAffinity'] as Map)
           : null,
+      requires: json['requires'] != null
+          ? Map<String, dynamic>.from(json['requires'] as Map)
+          : null,
     );
   }
 
@@ -91,6 +98,7 @@ class EventChoice {
       if (triggeredEventId != null) 'triggeredEventId': triggeredEventId,
       if (relationshipEffects != null) 'relationshipEffects': relationshipEffects,
       if (driveAffinity != null) 'driveAffinity': driveAffinity,
+      if (requires != null) 'requires': requires,
     };
   }
 

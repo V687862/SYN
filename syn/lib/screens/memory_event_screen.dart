@@ -70,7 +70,7 @@ class MemoryEventScreen extends ConsumerWidget {
             // Display Choices or Continue Button
             if (currentEvent.choices?.isNotEmpty ?? false)
               ...currentEvent.choices!.map((EventChoice choice) {
-                return _buildChoiceButton(context, ref, choice);
+                return _buildChoiceButton(context, ref, choice, playerProfile);
               })
             else // If no choices, provide a "Continue" button
               _buildContinueButton(context, ref)
@@ -81,21 +81,129 @@ class MemoryEventScreen extends ConsumerWidget {
   }
 
   Widget _buildChoiceButton(
-      BuildContext context, WidgetRef ref, EventChoice choice) {
+      BuildContext context, WidgetRef ref, EventChoice choice, final playerProfile) {
+    // Simple gating based on optional 'requires' metadata
+    bool eligible = true;
+    String? reason;
+    final req = choice.requires;
+    if (req != null) {
+      // minStats
+      final minStats = req['minStats'];
+      if (minStats is Map) {
+        for (final entry in minStats.entries) {
+          final key = entry.key.toString();
+          final min = (entry.value as num).toDouble();
+          final v = _statValue(playerProfile, key);
+          if (v < min) { eligible = false; reason = 'Requires $key ≥ ${min.toInt()}'; break; }
+        }
+      }
+      // relationship
+      if (eligible && req['relationship'] is Map) {
+        final r = Map<String, dynamic>.from(req['relationship'] as Map);
+        final role = (r['role'] as String?)?.toLowerCase();
+        final stage = (r['stage'] as String?);
+        final minAff = (r['minAffection'] as num?)?.toDouble();
+        final minTr = (r['minTrust'] as num?)?.toDouble();
+        final minCompat = (r['minSexCompatibility'] as num?)?.toDouble();
+        final minJeal = (r['minJealousy'] as num?)?.toDouble();
+        final maxJeal = (r['maxJealousy'] as num?)?.toDouble();
+        final npcId = r['npcId'] as String?; // optional specific target
+        bool found = false;
+        for (final n in playerProfile.relationships) {
+          if (npcId != null && n.id != npcId) continue;
+          if (role != null && n.role.name.toLowerCase() != role) continue;
+          if (stage != null && n.stage.name.toLowerCase() != stage.toLowerCase()) continue;
+          if (minAff != null && n.affection < minAff) continue;
+          if (minTr != null && n.trust < minTr) continue;
+          if (minCompat != null && n.sexCompatibility < minCompat) continue;
+          if (minJeal != null && n.jealousy < minJeal) continue;
+          if (maxJeal != null && n.jealousy > maxJeal) continue;
+          found = true; break;
+        }
+        if (!found) { eligible = false; reason = 'Relationship requirement not met'; }
+      }
+    }
+
+    // Relationship preview (actor)
+    String? affectsName;
+    if (choice.relationshipEffects != null) {
+      try {
+        final eff = choice.relationshipEffects!
+            .firstWhere((e) => (e['targetType'] as String?)?.toLowerCase() == 'id');
+        final id = eff['targetValue'] as String?;
+        if (id != null) {
+          final npc = playerProfile.relationships.firstWhere((n) => n.id == id, orElse: () => null);
+          if (npc != null) affectsName = npc.name;
+        }
+      } catch (_) {}
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: DivButton(
-        label: choice.text,
-        icon: Icons.chevron_right,
-        onPressed: () async {
-          print(
-            "--- UI: Choice '${choice.text}' (ID: ${choice.id}) Button Pressed ---",
-          );
-          // This method handles its own navigation logic (pushing a new event or popping).
-          await ref.read(playerStateProvider.notifier).processEventChoice(choice);
-        },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          DivButton(
+            label: choice.text,
+            icon: Icons.chevron_right,
+            enabled: eligible,
+            disabledReason: reason,
+            onPressed: eligible
+                ? () async {
+                    // Relationship change toast (preview)
+                    if (choice.relationshipEffects != null &&
+                        choice.relationshipEffects!.isNotEmpty) {
+                      final preview = _relationshipDeltaPreview(playerProfile, choice);
+                      if (preview != null) {
+                        Toast.info(context, preview);
+                      }
+                    }
+                    await ref
+                        .read(playerStateProvider.notifier)
+                        .processEventChoice(choice);
+                  }
+                : null,
+          ),
+          if (affectsName != null) ...[
+            const SizedBox(height: 4),
+            const HintText('Affects:'),
+            Text(affectsName,
+                textAlign: TextAlign.center,
+                style:
+                    const TextStyle(color: Colors.white70, fontSize: 12)),
+          ]
+        ],
       ),
     );
+  }
+
+  double _statValue(final playerProfile, String key) {
+    final s = playerProfile.stats;
+    switch (key.toLowerCase()) {
+      case 'health':
+        return s.health.toDouble();
+      case 'intelligence':
+        return s.intelligence.toDouble();
+      case 'charisma':
+        return s.charisma.toDouble();
+      case 'creativity':
+        return s.creativity.toDouble();
+      case 'strength':
+        return s.strength.toDouble();
+      case 'wealth':
+        return s.wealth.toDouble();
+      case 'appearance':
+      case 'appearancerating':
+        return s.appearanceRating.toDouble();
+      case 'reputation':
+        return s.reputation.toDouble();
+      case 'mood':
+        return s.mood.toDouble();
+      case 'libido':
+        return s.libido.toDouble();
+      default:
+        return 0;
+    }
   }
 
   Widget _buildContinueButton(BuildContext context, WidgetRef ref) {
@@ -113,5 +221,27 @@ class MemoryEventScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+}
+
+String? _relationshipDeltaPreview(final playerProfile, EventChoice choice) {
+  // Aggregate first targeted id deltas for a concise message
+  try {
+    final eff = choice.relationshipEffects!
+        .firstWhere((e) => (e['targetType'] as String?)?.toLowerCase() == 'id');
+    final id = eff['targetValue'] as String?;
+    if (id == null) return null;
+    final npc = playerProfile.relationships.firstWhere((n) => n.id == id,
+        orElse: () => null);
+    if (npc == null) return null;
+    final aff = (eff['affectionChange'] as num?)?.toInt();
+    final tr = (eff['trustChange'] as num?)?.toInt();
+    final parts = <String>[];
+    if (aff != null && aff != 0) parts.add('${aff > 0 ? '+' : ''}$aff Aff');
+    if (tr != null && tr != 0) parts.add('${tr > 0 ? '+' : ''}$tr Trust');
+    if (parts.isEmpty) return null;
+    return '${npc.name}: ' + parts.join(', ');
+  } catch (_) {
+    return null;
   }
 }

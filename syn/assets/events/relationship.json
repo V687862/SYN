@@ -22,9 +22,15 @@
     "summary": "{NPC_NAME} heard a rumor and seems distant.",
     "description": "They bring it up over dinner. The air is tense—do they trust you?",
     "choices": [
-      {"id":"reassure","text":"Reassure them and explain.","effects":{"charisma":1, "confidence":1}},
-      {"id":"push_back","text":"Push back on being accused.","effects":{"confidence":2, "mood":-1}},
-      {"id":"change_subject","text":"Change the subject and defuse.","effects":{"charisma":1, "wisdom":1}}
+      {"id":"reassure","text":"Reassure them and explain.","effects":{"charisma":1, "confidence":1},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","trustChange":2,"affectionChange":1}],
+        "triggeredEventId": "jealousy_breach_and_reconciliation"},
+      {"id":"push_back","text":"Push back on being accused.","effects":{"confidence":2, "mood":-1},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","trustChange":-3,"affectionChange":-2}],
+        "triggeredEventId": "jealousy_breach_and_reconciliation"},
+      {"id":"change_subject","text":"Change the subject and defuse.","effects":{"charisma":1, "wisdom":1},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","trustChange":-1}],
+        "triggeredEventId": "jealousy_breach_and_reconciliation"}
     ],
     "gate": {
       "relationshipConditions": [
@@ -40,7 +46,8 @@
     "description": "They've been dropping hints. This feels like a first date.",
     "choices": [
       {"id":"accept_date","text":"Accept and pick a cozy cafe.","effects":{"charisma":1, "confidence":2},
-        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","newRole":"lover","newStage":"dating","affectionChange":10,"trustChange":5}]},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","newRole":"lover","newStage":"dating","affectionChange":10,"trustChange":5}],
+        "triggeredEventId": "define_the_relationship"},
       {"id":"suggest_group","text":"Suggest a group hang instead.","effects":{"social":1},
         "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","affectionChange":2}]},
       {"id":"decline","text":"Decline politely.","effects":{"mood":-1},
@@ -60,7 +67,8 @@
     "description": "You've been seeing each other. It's time to define the relationship.",
     "choices": [
       {"id":"commit","text":"Commit to being exclusive.","effects":{"confidence":2,"happiness":2},
-        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","newRole":"lover","newStage":"committed","trustChange":10,"affectionChange":8}]},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","newRole":"lover","newStage":"committed","trustChange":10,"affectionChange":8}],
+        "triggeredEventId": "move_in_together"},
       {"id":"keep_casual","text":"Keep it casual for now.","effects":{"mood":-1},
         "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","affectionChange":-2}]}
     ],
@@ -95,10 +103,17 @@
     "summary": "A rumor strains your relationship with {NPC_NAME}.",
     "description": "They confront you. You can work to rebuild trust—or let it crack.",
     "choices": [
-      {"id":"rebuild","text":"Have an honest talk and rebuild.","effects":{"wisdom":1},
-        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","trustChange":8,"affectionChange":4}]},
+      {"id":"rebuild_open","text":"Open up and rebuild.","effects":{"wisdom":1},
+        "requires": {"relationship": {"npcId":"{ACTOR_ID}", "minTrust": 15, "maxJealousy": 60}},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","trustChange":8,"affectionChange":4}],
+        "triggeredEventId": "reconciliation_success"},
+      {"id":"rebuild_cautious","text":"Patch things but keep distance.",
+        "requires": {"relationship": {"npcId":"{ACTOR_ID}", "minJealousy": 60}},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","trustChange":-2}],
+        "triggeredEventId": "lingering_distrust"},
       {"id":"deny","text":"Deny and deflect.","effects":{"confidence":1},
-        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","trustChange":-6}]},
+        "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","trustChange":-6}],
+        "triggeredEventId": "lingering_distrust"},
       {"id":"break_up","text":"End it.","effects":{"mood":-3},
         "relationshipEffects": [{"targetType":"id","targetValue":"{ACTOR_ID}","newStage":"brokenUp","affectionChange":-20,"trustChange":-20}]}
     ],
@@ -107,6 +122,25 @@
         {"role": "lover", "minTrust": 10}
       ]
     },
+    "weight": 2
+  }
+  ,
+  {
+    "id": "reconciliation_success",
+    "tags": ["relationship", "romantic", "milestone"],
+    "summary": "You and {NPC_NAME} reconcile and feel closer.",
+    "description": "After an honest talk, trust feels restored.",
+    "effects": {"happiness": 3, "wisdom": 1},
+    "gate": {"relationshipConditions": [{"role":"lover"}]},
+    "weight": 2
+  },
+  {
+    "id": "lingering_distrust",
+    "tags": ["relationship", "conflict"],
+    "summary": "Things with {NPC_NAME} feel unresolved.",
+    "description": "The tension lingers. Trust will take time to rebuild.",
+    "effects": {"mood": -2},
+    "gate": {"relationshipConditions": [{"role":"lover"}]},
     "weight": 2
   }
 ]

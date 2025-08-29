@@ -310,18 +310,65 @@ class RelationshipService {
 
   PlayerProfile recomputeCompatibility(PlayerProfile profile) {
     final s = profile.stats;
+    final playerInterests = _playerInterests(profile);
     final list = <NPC>[];
     for (final n in profile.relationships) {
       // Player side proxy (charisma + appearance + libido)
-      final playerSignal = ((s.charisma + s.appearanceRating + s.libido) / 3).toDouble();
+      final playerSignal =
+          ((s.charisma + s.appearanceRating + s.libido) / 3).toDouble();
       // NPC predisposition
-      final npcSignal = (n.agreeableness * 0.3 + n.extraversion * 0.2 + n.honesty * 0.2 + (100 - n.jealousy) * 0.15 + (100 - n.neuroticism) * 0.15).toDouble();
-      final raw = ((playerSignal * 0.5 + npcSignal * 0.5).clamp(0.0, 100.0) as num).toDouble();
+      final npcSignal = (n.agreeableness * 0.3 +
+              n.extraversion * 0.2 +
+              n.honesty * 0.2 +
+              (100 - n.jealousy) * 0.15 +
+              (100 - n.neuroticism) * 0.15)
+          .toDouble();
+      // Interests overlap boost
+      final overlap = n.interests.toSet().intersection(playerInterests).length;
+      final interestBoost = (overlap * 5).clamp(0, 15);
+      final raw = ((playerSignal * 0.5 + npcSignal * 0.5) + interestBoost)
+          .clamp(0.0, 100.0) as double;
       // Blend to avoid jitter
-      final blended = ((n.sexCompatibility * 0.7 + raw * 0.3).clamp(0.0, 100.0) as num).toDouble();
+      final blended =
+          ((n.sexCompatibility * 0.7 + raw * 0.3).clamp(0.0, 100.0) as num)
+              .toDouble();
       list.add(n.copyWith(sexCompatibility: blended));
     }
     return profile.copyWith(relationships: list);
+  }
+
+  Set<String> _playerInterests(PlayerProfile p) {
+    final interests = <String>{};
+    p.coreDriveScores.forEach((k, v) {
+      if (v <= 10) return; // only significant drives
+      switch (k) {
+        case 'master_a_craft':
+          interests.addAll(['art', 'craft', 'skill']);
+          break;
+        case 'seek_knowledge':
+          interests.addAll(['science', 'learning', 'tech']);
+          break;
+        case 'build_connections':
+          interests.addAll(['community', 'social']);
+          break;
+        case 'amass_wealth':
+          interests.addAll(['finance', 'business']);
+          break;
+        case 'experience_everything':
+          interests.addAll(['travel', 'adventure', 'food']);
+          break;
+        case 'fight_for_a_cause':
+          interests.addAll(['activism', 'politics']);
+          break;
+        case 'seek_transcendence':
+          interests.addAll(['philosophy', 'spirituality']);
+          break;
+        case 'survive_at_all_costs':
+          interests.addAll(['fitness', 'survival']);
+          break;
+      }
+    });
+    return interests;
   }
 
   _Decay _baseDecayForRole(NPCRole role) {

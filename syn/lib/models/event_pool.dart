@@ -191,7 +191,11 @@ class PooledEventTemplate {
             });
             return mm;
           }).toList();
-          return c.copyWith(text: t, outcomeDescription: od, relationshipEffects: rel);
+          Map<String, dynamic>? req;
+          if (c.requires != null) {
+            req = _deepReplace(Map<String, dynamic>.from(c.requires!), variables);
+          }
+          return c.copyWith(text: t, outcomeDescription: od, relationshipEffects: rel, requires: req);
         }).toList();
       }
     }
@@ -205,5 +209,23 @@ class PooledEventTemplate {
       nsfw: nsfw,
       choices: ch,
     );
+  }
+
+  Map<String, dynamic> _deepReplace(Map<String, dynamic> input, Map<String, String> vars) {
+    final out = <String, dynamic>{};
+    input.forEach((k, v) {
+      if (v is String) {
+        var s = v;
+        vars.forEach((vk, vv) { s = s.replaceAll('{$vk}', vv); });
+        out[k] = s;
+      } else if (v is Map) {
+        out[k] = _deepReplace(Map<String, dynamic>.from(v), vars);
+      } else if (v is List) {
+        out[k] = v.map((e) => e is String ? vars.entries.fold(e, (acc, ent) => acc.replaceAll('{${ent.key}}', ent.value)) : e).toList();
+      } else {
+        out[k] = v;
+      }
+    });
+    return out;
   }
 }

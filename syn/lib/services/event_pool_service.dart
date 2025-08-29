@@ -162,14 +162,25 @@ class EventPoolService {
 
   Future<PooledEventTemplate?> pickWeighted(
     PlayerProfile profile,
-    AppSettings settings,
-  ) async {
+    AppSettings settings, {
+    List<String>? preferredTags,
+  }) async {
     final eligible = await eligibleTemplates(profile, settings);
     if (eligible.isEmpty) return null;
     // Apply core drive weighting
     final weighted = eligible.map((e) {
       final factor = _driveFactor(profile, e);
-      final eff = (e.weight * factor).clamp(1, 1e9).toDouble();
+      // Tag bias boost
+      double tagBoost = 1.0;
+      if (preferredTags != null && preferredTags.isNotEmpty) {
+        final matches = e.tags
+            .where((t) => preferredTags.any((pt) => pt.toLowerCase() == t.toLowerCase()))
+            .length;
+        if (matches > 0) {
+          tagBoost += (0.2 * matches).clamp(0.0, 0.8); // up to +80%
+        }
+      }
+      final eff = (e.weight * factor * tagBoost).clamp(1, 1e9).toDouble();
       return MapEntry(e, eff);
     }).toList();
     final total = weighted.fold<double>(0, (sum, me) => sum + me.value);
@@ -195,5 +206,14 @@ class EventPoolService {
       if (factor > best) best = factor;
     }
     return best;
+  }
+
+  Future<PooledEventTemplate?> getById(String id) async {
+    final all = await _loadAll();
+    try {
+      return all.firstWhere((e) => e.id == id);
+    } catch (_) {
+      return null;
+    }
   }
 }

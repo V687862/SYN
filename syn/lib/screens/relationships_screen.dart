@@ -46,6 +46,17 @@ class RelationshipsScreen extends ConsumerWidget {
                             Text('${n.role.name.toUpperCase()} • ${n.stage.name.toUpperCase()} • AGE ${n.age}',
                                 style: const TextStyle(
                                     color: Colors.white70, fontSize: 12)),
+                            final shared = _sharedInterest(playerProfile, n);
+                            if (shared != null) ...[
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  const Icon(Icons.tag, size: 12, color: Colors.white54),
+                                  const SizedBox(width: 4),
+                                  Text('Shared: $shared', style: const TextStyle(fontSize: 11, color: Colors.white70)),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -130,5 +141,43 @@ class RelationshipsScreen extends ConsumerWidget {
         Text('Compat ${value}%', style: const TextStyle(fontSize: 10, color: Colors.white70)),
       ],
     );
+  }
+
+  String? _sharedInterest(final profile, NPC n) {
+    // Mirror mapping used in RelationshipService._playerInterests
+    final drives = profile.coreDriveScores;
+    final playerInterests = <String>{};
+    drives.forEach((k, v) {
+      if (v <= 10) return;
+      switch (k) {
+        case 'master_a_craft':
+          playerInterests.addAll(['art', 'craft', 'skill']);
+          break;
+        case 'seek_knowledge':
+          playerInterests.addAll(['science', 'learning', 'tech']);
+          break;
+        case 'build_connections':
+          playerInterests.addAll(['community', 'social']);
+          break;
+        case 'amass_wealth':
+          playerInterests.addAll(['finance', 'business']);
+          break;
+        case 'experience_everything':
+          playerInterests.addAll(['travel', 'adventure', 'food']);
+          break;
+        case 'fight_for_a_cause':
+          playerInterests.addAll(['activism', 'politics']);
+          break;
+        case 'seek_transcendence':
+          playerInterests.addAll(['philosophy', 'spirituality']);
+          break;
+        case 'survive_at_all_costs':
+          playerInterests.addAll(['fitness', 'survival']);
+          break;
+      }
+    });
+    final overlap = n.interests.toSet().intersection(playerInterests);
+    if (overlap.isEmpty) return null;
+    return overlap.first;
   }
 }
